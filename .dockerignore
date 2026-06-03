@@ -1,0 +1,15 @@
+.git
+.github
+.next
+.pnpm-store
+node_modules
+
+.env
+.env*.local
+
+*.log
+*.tsbuildinfo
+temp_*.html
+
+README.md
+docs
