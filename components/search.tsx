@@ -21,6 +21,7 @@ export function Search() {
   const [loading, setLoading] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
@@ -35,6 +36,19 @@ export function Search() {
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node) || dialogRef.current?.contains(target)) return
+      setIsOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    return () => document.removeEventListener('pointerdown', handlePointerDown)
+  }, [isOpen])
 
   const doSearch = useCallback(async (q: string) => {
     const params = new URLSearchParams()
@@ -118,6 +132,7 @@ export function Search() {
           onClick={() => setIsOpen(false)}
         >
           <div
+            ref={dialogRef}
             className="bg-card border border-border/60 max-w-[540px] w-full rounded-xl shadow-2xl overflow-hidden flex flex-col scale-up"
             onClick={(e) => e.stopPropagation()}
           >
