@@ -95,7 +95,7 @@ export default async function PostPage({ params }: PostPageProps) {
           <span aria-hidden="true">·</span>
           <ShareButton />
         </div>
-        <h1 className="mt-4 font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground leading-tight text-balance tracking-tight">
+        <h1 className="mt-4 w-full font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground/85 leading-tight tracking-tight">
           {post.title}
         </h1>
         {post.tags.length > 0 && (

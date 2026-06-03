@@ -30,7 +30,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             </>
           )}
         </div>
-        <h2 className="mt-3 font-serif text-[1.375rem] leading-snug font-semibold text-foreground group-hover:opacity-70 transition-editorial text-balance tracking-tight">
+        <h2 className="mt-3 w-full font-serif text-[1.375rem] leading-snug font-semibold text-foreground/85 group-hover:text-foreground/65 transition-editorial tracking-tight">
           {post.title}
         </h2>
         {post.excerpt && (
