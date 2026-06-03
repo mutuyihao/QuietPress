@@ -25,6 +25,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               name="email"
               type="email"
               placeholder="admin@example.com"
+              className="placeholder:text-muted-foreground/40"
               required
             />
           </div>
@@ -36,12 +37,18 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               name="password"
               type="password"
               placeholder="••••••••"
+              className="placeholder:text-muted-foreground/40"
               required
             />
           </div>
 
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <div
+              role="alert"
+              className="rounded-lg border border-[var(--toast-error-border)] bg-[var(--toast-error-bg)] px-3.5 py-3 text-sm leading-relaxed text-[var(--toast-error-text)]"
+            >
+              {error}
+            </div>
           )}
 
           <Button type="submit" className="w-full">
@@ -52,4 +59,3 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     </div>
   )
 }
-
