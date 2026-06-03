@@ -6,7 +6,13 @@ import { ViewsChart } from '@/components/admin-views-chart'
 import { TrendChart } from '@/components/admin-trend-chart'
 import { FileText, Eye, Edit3, Tag, TrendingUp, Plus } from 'lucide-react'
 
-export default async function AdminDashboard() {
+interface AdminDashboardProps {
+  searchParams?: Promise<{ login?: string }>
+}
+
+export default async function AdminDashboard({ searchParams }: AdminDashboardProps) {
+  const params = await searchParams
+  const showLoginSuccess = params?.login === 'success'
   const posts = await getAllPostsAdmin()
 
   // Calculate statistics
@@ -24,6 +30,15 @@ export default async function AdminDashboard() {
 
   return (
     <div className="admin-page font-sans">
+      {showLoginSuccess && (
+        <div
+          role="status"
+          className="rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm leading-relaxed text-foreground shadow-xs"
+        >
+          登录成功，已进入管理后台。
+        </div>
+      )}
+
       {/* Upper header */}
       <div className="admin-page-header sm:flex sm:items-end sm:justify-between">
         <div>

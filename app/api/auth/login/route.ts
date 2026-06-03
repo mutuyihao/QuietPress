@@ -8,6 +8,26 @@ function loginRedirect(request: NextRequest, error: string) {
   return NextResponse.redirect(url, { status: 303 })
 }
 
+function adminRedirect(request: NextRequest) {
+  const url = new URL('/admin', request.url)
+  url.searchParams.set('login', 'success')
+  return NextResponse.redirect(url, { status: 303 })
+}
+
+function getAuthErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase()
+
+  if (normalizedMessage.includes('invalid login credentials')) {
+    return '账号或密码不正确，请检查后重试。'
+  }
+
+  if (normalizedMessage.includes('email not confirmed')) {
+    return '邮箱尚未完成验证，请先完成邮箱验证。'
+  }
+
+  return '登录失败，请稍后再试。'
+}
+
 function getClientIp(request: NextRequest): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
     || request.headers.get('x-real-ip')
@@ -26,8 +46,16 @@ export async function POST(request: NextRequest) {
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
 
-  if (!email || !password) {
+  if (!email && !password) {
     return loginRedirect(request, '请输入邮箱和密码。')
+  }
+
+  if (!email) {
+    return loginRedirect(request, '请输入邮箱。')
+  }
+
+  if (!password) {
+    return loginRedirect(request, '请输入密码。')
   }
 
   const supabase = await createClient()
@@ -37,7 +65,7 @@ export async function POST(request: NextRequest) {
   })
 
   if (authError) {
-    return loginRedirect(request, authError.message)
+    return loginRedirect(request, getAuthErrorMessage(authError.message))
   }
 
   const user = data.user
@@ -93,5 +121,5 @@ export async function POST(request: NextRequest) {
     return loginRedirect(request, '您没有管理员权限。')
   }
 
-  return NextResponse.redirect(new URL('/admin', request.url), { status: 303 })
+  return adminRedirect(request)
 }
