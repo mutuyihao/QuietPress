@@ -156,7 +156,7 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                 <col className="w-12" />
                 <col />
                 <col className="w-20" />
-                <col className="w-16" />
+                <col className="w-20" />
                 <col className="w-32" />
                 <col className="w-16" />
               </colgroup>
@@ -231,7 +231,7 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                       <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">状态</th>
                       <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">浏览</th>
                       <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">更新时间</th>
-                      <th className="h-14 px-4 py-0 align-middle text-right text-xs font-semibold tracking-wide text-muted-foreground/75">操作</th>
+                      <th className="h-14 px-2 py-0 text-center align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">操作</th>
                     </>
                   )}
                 </tr>
@@ -299,14 +299,16 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                         {formatDate(post.updated_at)}
                       </span>
                     </td>
-                    <td className="px-4 py-0 align-middle text-right">
-                      <div className="flex min-h-[72px] items-center justify-end py-3">
+                    <td className="px-2 py-0 text-center align-middle">
+                      <div className="flex min-h-[72px] items-center justify-center py-3">
                         <Link
                           href={`/admin/posts/${post.id}`}
-                          className="inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-medium leading-none text-primary hover:underline"
+                          className="group/action relative inline-flex h-8 min-w-14 items-center justify-center overflow-hidden rounded-md px-3 text-[13px] font-medium leading-none text-primary transition-colors hover:bg-primary/5 hover:text-primary"
                         >
-                          编辑
-                          <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                          <span className="transition-transform duration-150 group-hover/action:-translate-x-1.5">
+                            编辑
+                          </span>
+                          <ArrowRight className="pointer-events-none absolute right-2.5 h-3 w-3 translate-x-1 opacity-0 transition-all duration-150 group-hover/action:translate-x-0 group-hover/action:opacity-100" />
                         </Link>
                       </div>
                     </td>

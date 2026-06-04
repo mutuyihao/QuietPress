@@ -32,7 +32,7 @@ export function LoginRedirectCountdown({ seconds = 3 }: LoginRedirectCountdownPr
       <div
         role="status"
         aria-live="polite"
-        className="rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-4 py-3 text-sm leading-relaxed text-emerald-700 dark:text-emerald-300"
+        className="rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm leading-relaxed text-foreground shadow-xs"
       >
         登录成功，{remaining} 秒后进入管理后台。
       </div>
