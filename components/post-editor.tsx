@@ -179,6 +179,7 @@ export function PostEditor({
     startTransition(async () => {
       try {
         await deletePost(post.id)
+        toast.success('\u6587\u7ae0\u5df2\u5220\u9664')
         router.push('/admin')
         router.refresh()
       } catch (err) {

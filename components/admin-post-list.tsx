@@ -81,8 +81,12 @@ export function AdminPostList({ posts }: AdminPostListProps) {
         const ids = Array.from(selectedIds)
         if (action === 'delete') {
           await batchDeletePosts(ids)
+          toast.success(`\u5df2\u5220\u9664 ${ids.length} \u7bc7\u6587\u7ae0`)
         } else {
           await batchUpdatePosts(ids, action === 'publish' ? 'published' : 'archived')
+          toast.success(action === 'publish'
+            ? `\u5df2\u53d1\u5e03 ${ids.length} \u7bc7\u6587\u7ae0`
+            : `\u5df2\u5f52\u6863 ${ids.length} \u7bc7\u6587\u7ae0`)
         }
         setSelectedIds(new Set())
         router.refresh()
