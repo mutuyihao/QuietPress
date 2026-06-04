@@ -8,8 +8,8 @@ function loginRedirect(request: NextRequest, error: string) {
   return NextResponse.redirect(url, { status: 303 })
 }
 
-function adminRedirect(request: NextRequest) {
-  const url = new URL('/admin', request.url)
+function loginSuccessRedirect(request: NextRequest) {
+  const url = new URL('/auth/login', request.url)
   url.searchParams.set('login', 'success')
   return NextResponse.redirect(url, { status: 303 })
 }
@@ -121,5 +121,5 @@ export async function POST(request: NextRequest) {
     return loginRedirect(request, '您没有管理员权限。')
   }
 
-  return adminRedirect(request)
+  return loginSuccessRedirect(request)
 }
