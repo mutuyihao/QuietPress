@@ -53,7 +53,7 @@ docs/                 项目文档
 - `GET /api/health`: 健康检查，包含 Supabase 连接状态。
 - `GET /api/search`: 公开搜索，调用 `search_posts` RPC，带基础限流。
 - `GET/POST /api/comments`: 评论读取和提交；提交会消毒 HTML，默认进入 pending。
-- `POST /api/newsletter`: 邮件订阅。
+- `POST /api/newsletter`: 邮件订阅接口（当前前台入口隐藏；仅保留邮箱记录能力，不发送邮件）。
 - `POST /api/view-event`: 浏览事件记录。
 - `GET /api/cron/publish-scheduled`: 计划发布，需要 `CRON_SECRET`。
 - `POST /api/auth/login`: 登录和首次管理员认领。
@@ -76,7 +76,7 @@ docs/                 项目文档
 - `view_events`: 浏览事件。
 - `post_revisions`: 文章修订历史。
 - `comments`: 评论。
-- `newsletter_subscribers`: 邮件订阅。
+- `newsletter_subscribers`: 邮件订阅者（预留；当前前台入口隐藏）。
 
 核心 RPC：
 
@@ -155,6 +155,6 @@ Docker：
 - 没有测试框架；当前发布门禁是 lint + build。
 - API 响应格式还未完全统一。
 - 评论/搜索等限流是进程内存实现，不适合多实例强一致限流。
-- 邮件订阅只记录订阅，不包含邮件发送和双重确认。
+- 邮件订阅前台入口已隐藏；后端仅保留邮箱记录接口，不包含邮件发送、双重确认或退订流程。
 - 文章修订历史支持查看，但尚未支持 diff 和恢复。
 - 许可证尚未选择，公开发布前需要决定。

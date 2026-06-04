@@ -45,7 +45,7 @@ Comprehensive project audit conducted across 6 dimensions: Performance, UX, Code
 | AUD-067 | Medium | Open | Feature/Admin | No media library management page |
 | AUD-068 | Medium | Open | Security/Scale | Rate limiter uses in-memory Map — fails in multi-instance, no max size |
 | AUD-069 | Medium | Open | Feature/UX | Comment section missing Markdown, likes, admin reply, email notifications |
-| AUD-070 | Medium | Open | Security/Feature | Newsletter no email verification — anyone can subscribe any address |
+| AUD-070 | Medium | Open | Security/Feature | Newsletter UI is hidden; retained API still has no email verification if re-enabled |
 | AUD-071 | Medium | Open | Security/Data | View counter can be inflated — only sessionStorage dedup |
 | AUD-072 | Medium | Open | Security | No CSP or security headers configured |
 | AUD-073 | Medium | Open | Scalability | No database index strategy documented or verified |
@@ -69,7 +69,7 @@ Comprehensive project audit conducted across 6 dimensions: Performance, UX, Code
 | AUD-086 | Low | Open | Feature | No article bookmark/favorite feature |
 | AUD-087 | Low | Open | Feature | No article import/export |
 | AUD-088 | Low | Open | Feature/Admin | No Open Graph preview in editor |
-| AUD-089 | Low | Open | Feature/Admin | No newsletter analytics dashboard |
+| AUD-089 | Low | Open | Feature/Admin | No newsletter analytics dashboard; newsletter entry is currently hidden |
 | AUD-090 | Low | Open | Feature/Admin | Revision history no diff or restore |
 
 ### Session 4 Summary
@@ -92,7 +92,7 @@ Fix plan and milestones: [fix-plan.md](./fix-plan.md)
 | AUD-020 | Medium | **Fixed** | Admin | Image upload via `/api/admin/upload` — drag-and-drop + click-to-upload in post editor. Cover image and inline Markdown image insertion. Supabase Storage bucket `blog-images` migration created. |
 | AUD-029 | Low | **Fixed** | Feature | Article revision history — `post_revisions` table, auto-save on create/update, admin viewer with version list and content inspection. Max 50 revisions per post. |
 | AUD-031 | Low | **Fixed** | Feature | Media upload component with preview, drag-and-drop, file type/size validation. Cover image preview after URL or upload. |
-| AUD-032 | Low | **Fixed** | Feature | Newsletter subscription — email signup form on homepage, `/api/newsletter` endpoint, `newsletter_subscribers` table with resubscribe support. |
+| AUD-032 | Low | **Deferred** | Feature | Newsletter subscription implementation is retained, but the public entry is hidden until email sending, confirmation, and unsubscribe flows are implemented. |
 | AUD-037 | Low | **Fixed** | Feature | Comment system — threaded/nested replies, pending→approved→spam workflow, admin moderation page (`/admin/comments`), RLS-enforced. |
 | AUD-026 | Low | **Fixed** | DevOps | Dockerfile (multi-stage, standalone output) + GitHub Actions CI workflow (lint + build). |
 
@@ -181,7 +181,7 @@ All active issues and the unified execution plan now live in the consolidated do
 | Image upload | Manual URL only | Drag-and-drop + paste |
 | Revision history | None | Auto-save + viewer |
 | Comments | None | Threaded + admin moderation |
-| Newsletter | None | Subscribe form + API |
+| Newsletter | None | API + data model retained; public form hidden |
 | Docker/CI | None | Dockerfile + GitHub Actions |
 | Health check | None | /api/health |
 | middleware→proxy | Deprecated | Migrated |

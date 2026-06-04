@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { Github, Twitter, Linkedin, Instagram } from 'lucide-react'
-import { NewsletterTrigger } from '@/components/newsletter-form'
+// import { NewsletterTrigger } from '@/components/newsletter-form'
 
 interface FooterProps {
   siteName: string
@@ -49,7 +49,11 @@ export function Footer({ siteName, socialLinks = {} }: FooterProps) {
               >
                 RSS
               </Link>
-              <NewsletterTrigger />
+              {/*
+                Newsletter is temporarily hidden until outbound email sending,
+                confirmation, and unsubscribe flows are implemented.
+                <NewsletterTrigger />
+              */}
             </div>
           </div>
         </div>
