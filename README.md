@@ -1,6 +1,6 @@
 # QuietPress
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmutuyihao%2Fblog&project-name=quietpress&repository-name=quietpress&env=ADMIN_EMAIL&envDescription=Enter%20the%20email%20address%20for%20the%20first%20admin%20account.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmutuyihao%2Fblog&project-name=quietpress&repository-name=quietpress&env=ADMIN_EMAIL&envDescription=Enter%20the%20email%20address%20for%20the%20first%20admin%20account.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D) 点击左侧 `Deploy` 按钮，即可在 Vercel 一键部署 QuietPress。
 
 QuietPress 是一个基于 Next.js App Router 和 Supabase 的个人博客 CMS 模板，支持 Vercel 一键部署。它包含公开博客、后台管理、Markdown 写作、图片上传、评论审核、阅读统计、RSS、Sitemap、站点设置和多存储后端。
 
