@@ -1,5 +1,5 @@
--- Gugu Blog initial database bootstrap for first public release.
--- This migration is intended for a fresh Supabase project.
+-- QuietPress 初始数据库 bootstrap，用于首次公开发布。
+-- 该 migration 面向全新的 Supabase 项目。
 
 create extension if not exists pgcrypto;
 
@@ -49,8 +49,8 @@ create table if not exists public.post_tags (
 
 create table if not exists public.site_settings (
   id text primary key default 'main' check (id = 'main'),
-  site_name text not null default 'Minimalist Blog',
-  site_description text not null default 'A quiet space for thoughts and ideas.',
+  site_name text not null default 'QuietPress',
+  site_description text not null default '一个安静记录想法的地方。',
   base_url text,
   author_name text not null default '',
   default_og_image_url text,
@@ -63,7 +63,7 @@ create table if not exists public.site_settings (
   image_max_width integer not null default 1920,
   image_max_height integer not null default 1920,
   social_links jsonb not null default '{}'::jsonb,
-  about_content text not null default '欢迎来到我的博客。',
+  about_content text not null default '欢迎来到 QuietPress。',
   updated_at timestamptz not null default now()
 );
 

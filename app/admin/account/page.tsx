@@ -7,9 +7,9 @@ export default async function AdminAccountPage() {
   return (
     <div className="admin-page">
       <div className="admin-page-header">
-        <h1 className="admin-page-title">Account</h1>
+        <h1 className="admin-page-title">账号设置</h1>
         <p className="text-sm text-muted-foreground">
-          Signed in as {session?.user.email || 'unknown user'}.
+          当前登录账号：{session?.user.email || '未知用户'}。
         </p>
       </div>
       <AccountPasswordForm />

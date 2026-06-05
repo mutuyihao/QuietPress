@@ -348,7 +348,7 @@ export async function updateAdminPassword(formData: FormData) {
   }
 
   if (!user.email) {
-    return { success: false, error: 'Current user does not have an email address.' }
+    return { success: false, error: '当前用户没有邮箱地址。' }
   }
 
   const { current_password, new_password } = parsed.data
@@ -358,7 +358,7 @@ export async function updateAdminPassword(formData: FormData) {
   })
 
   if (signInError || !signInData.user) {
-    return { success: false, error: 'Current password is incorrect.' }
+    return { success: false, error: '当前密码不正确。' }
   }
 
   const nextMetadata = {

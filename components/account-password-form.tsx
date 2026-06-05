@@ -28,14 +28,14 @@ export function AccountPasswordForm() {
       const result = await updateAdminPassword(formData)
 
       if (!result.success) {
-        toast.error(result.error || 'Failed to update password')
+        toast.error(result.error || '密码更新失败')
         return
       }
 
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
-      toast.success('Password updated')
+      toast.success('密码已更新')
       router.refresh()
     })
   }
@@ -43,14 +43,14 @@ export function AccountPasswordForm() {
   return (
     <form onSubmit={handleSubmit} className="admin-panel max-w-xl space-y-5 p-5">
       <div className="space-y-1">
-        <h2 className="admin-section-title">Password</h2>
+        <h2 className="admin-section-title">修改密码</h2>
         <p className="text-sm text-muted-foreground">
-          Change the temporary deployment password after the first login.
+          首次登录后请修改一键部署创建的临时密码。
         </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="currentPassword">Current password</Label>
+        <Label htmlFor="currentPassword">当前密码</Label>
         <Input
           id="currentPassword"
           type="password"
@@ -62,7 +62,7 @@ export function AccountPasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="newPassword">New password</Label>
+        <Label htmlFor="newPassword">新密码</Label>
         <Input
           id="newPassword"
           type="password"
@@ -75,7 +75,7 @@ export function AccountPasswordForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm new password</Label>
+        <Label htmlFor="confirmPassword">确认新密码</Label>
         <Input
           id="confirmPassword"
           type="password"
@@ -88,7 +88,7 @@ export function AccountPasswordForm() {
       </div>
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? 'Updating...' : 'Update password'}
+        {isPending ? '更新中...' : '更新密码'}
       </Button>
     </form>
   )

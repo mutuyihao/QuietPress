@@ -43,7 +43,7 @@ const navItems = [
   },
   {
     href: '/admin/account',
-    label: 'Account',
+    label: '账号',
     isActive: (pathname: string) => pathname.startsWith('/admin/account'),
   },
 ]

@@ -57,10 +57,10 @@ async function PasswordChangeNotice() {
     <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
       <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span>
-          This account is using the temporary deployment password. Change it before publishing the site.
+          当前账号仍在使用一键部署创建的临时密码。正式发布前请先修改密码。
         </span>
         <Link href="/admin/account" className="font-medium underline underline-offset-4">
-          Change password
+          修改密码
         </Link>
       </div>
     </div>

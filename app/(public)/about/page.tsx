@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default async function AboutPage() {
   const settings = await getSiteSettings()
-  const aboutHtml = await markdownToHtml(settings?.about_content || '欢迎来到我的博客。')
+  const aboutHtml = await markdownToHtml(settings?.about_content || '欢迎来到 QuietPress。')
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
@@ -23,7 +23,7 @@ export default async function AboutPage() {
 
       {settings?.author_name && (
         <p className="mt-12 text-[15px] text-muted-foreground tracking-wide">
-          — {settings.author_name}
+          - {settings.author_name}
         </p>
       )}
     </div>

@@ -1,8 +1,8 @@
-# Architecture
+# 架构
 
 ## 概览
 
-这是一个 Next.js App Router 应用，公开博客和后台管理共用同一个代码库。Supabase 提供 Auth、Postgres、RLS 和默认对象存储；上传层也支持 S3 兼容服务和 Cloudflare R2。
+QuietPress 是一个 Next.js App Router 应用，公开博客和后台管理共用同一个代码库。Supabase 提供 Auth、Postgres、RLS 和默认对象存储；上传层也支持 S3 兼容服务和 Cloudflare R2。
 
 ```text
 Browser
@@ -25,7 +25,7 @@ docs/                 项目文档
 
 ## 公开路由
 
-- `/`: 分页文章列表，每页 10 篇。
+- `/`: 分页文章列表。
 - `/posts/[slug]`: 文章详情，包含 Markdown 渲染、目录、代码块增强、浏览计数、相关文章、评论。
 - `/tags`: 标签列表。
 - `/tags/[slug]`: 标签文章列表。
@@ -38,6 +38,7 @@ docs/                 项目文档
 
 - `/auth/login`: 管理员登录。
 - `/admin`: 仪表盘、文章列表、统计图和热门阅读。
+- `/admin/account`: 管理员修改密码。
 - `/admin/posts/new`: 新建文章。
 - `/admin/posts/[id]`: 编辑文章、图片上传、修订历史。
 - `/admin/tags`: 标签管理。
@@ -53,7 +54,7 @@ docs/                 项目文档
 - `GET /api/health`: 健康检查，包含 Supabase 连接状态。
 - `GET /api/search`: 公开搜索，调用 `search_posts` RPC，带基础限流。
 - `GET/POST /api/comments`: 评论读取和提交；提交会消毒 HTML，默认进入 pending。
-- `POST /api/newsletter`: 邮件订阅接口（当前前台入口隐藏；仅保留邮箱记录能力，不发送邮件）。
+- `POST /api/newsletter`: 邮件订阅接口，当前前台入口隐藏；仅保留邮箱记录能力，不发送邮件。
 - `POST /api/view-event`: 浏览事件记录。
 - `GET /api/cron/publish-scheduled`: 计划发布，需要 `CRON_SECRET`。
 - `POST /api/auth/login`: 登录和首次管理员认领。
@@ -76,7 +77,7 @@ docs/                 项目文档
 - `view_events`: 浏览事件。
 - `post_revisions`: 文章修订历史。
 - `comments`: 评论。
-- `newsletter_subscribers`: 邮件订阅者（预留；当前前台入口隐藏）。
+- `newsletter_subscribers`: 邮件订阅者预留表。
 
 核心 RPC：
 
@@ -94,7 +95,7 @@ Markdown 由 `lib/blog-utils.ts` 处理：
 - `marked` 解析 Markdown。
 - `sanitize-html` 清洗 HTML。
 - 标题生成稳定 id。
-- Markdown HTML 使用内存 LRU 风格缓存，最多 200 条。
+- Markdown HTML 使用内存 LRU 风格缓存。
 - 图片只允许 `http`/`https` scheme，默认 lazy loading。
 
 ## 存储
@@ -125,14 +126,23 @@ Markdown 由 `lib/blog-utils.ts` 处理：
 - Supabase RLS 是最终数据权限边界。
 - 后台路由通过 Supabase session 和 `admin_profiles` 校验。
 - 单管理员模式是当前产品约束。
-- 评论提交限流为内存 Map，适合单实例；多实例生产环境建议迁移到 Redis/Upstash。
 - 登录、评论、搜索、浏览事件有基础限流。
+- 评论/搜索等限流是进程内存实现，不适合多实例强一致防护；多实例生产环境建议迁移到 Redis/Upstash。
 - 评论和 Markdown 输出有 HTML 消毒。
 - 上传端 MIME 内容校验，禁止 SVG。
 - `next.config.mjs` 配置 CSP、HSTS、X-Frame-Options、Referrer-Policy、Permissions-Policy 等安全头。
 - Cron 路由必须携带 `Authorization: Bearer <CRON_SECRET>`。
 
-## CI 与部署
+## 部署
+
+Vercel 一键部署：
+
+- 使用 README 的 Deploy Button。
+- 通过 Vercel Marketplace 创建或连接 Supabase。
+- 在 `next build` 前运行 `pnpm bootstrap:vercel`。
+- 自动执行 `supabase/migrations/202606020001_initial_release.sql`。
+- 使用 `ADMIN_EMAIL` 创建第一个管理员。
+- 初始临时密码为 `QuietPress@2026!`，必须在 `/admin/account` 修改。
 
 GitHub Actions：
 

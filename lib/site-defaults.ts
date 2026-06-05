@@ -1,2 +1,2 @@
-export const DEFAULT_SITE_NAME = 'Minimalist Blog'
-export const DEFAULT_SITE_DESCRIPTION = 'A quiet space for thoughts and ideas.'
+export const DEFAULT_SITE_NAME = 'QuietPress'
+export const DEFAULT_SITE_DESCRIPTION = '一个安静记录想法的地方。'

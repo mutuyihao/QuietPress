@@ -80,14 +80,14 @@ export const storageSettingsSchema = z.object({
 })
 
 export const adminPasswordSchema = z.object({
-  current_password: z.string().min(1, 'Current password is required'),
-  new_password: z.string().min(8, 'New password must be at least 8 characters'),
-  confirm_password: z.string().min(1, 'Please confirm the new password'),
+  current_password: z.string().min(1, '请输入当前密码'),
+  new_password: z.string().min(8, '新密码至少需要 8 个字符'),
+  confirm_password: z.string().min(1, '请确认新密码'),
 }).superRefine((value, ctx) => {
   if (value.new_password !== value.confirm_password) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'New password and confirmation do not match',
+      message: '两次输入的新密码不一致',
       path: ['confirm_password'],
     })
   }
@@ -95,7 +95,7 @@ export const adminPasswordSchema = z.object({
   if (value.current_password === value.new_password) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'New password must be different from the current password',
+      message: '新密码不能和当前密码相同',
       path: ['new_password'],
     })
   }

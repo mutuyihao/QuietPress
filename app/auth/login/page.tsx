@@ -42,7 +42,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="********"
                 className="placeholder:text-muted-foreground/40"
                 required
               />

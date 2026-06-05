@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const INITIAL_ADMIN_PASSWORD = 'GuguBlog@2026!'
+const INITIAL_ADMIN_PASSWORD = 'QuietPress@2026!'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(dirname, '..')

@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           dailyViews: [],
           topPosts: [],
-          message: 'Initial database migration has not been applied. Run supabase/migrations/202606020001_initial_release.sql.',
+          message: '初始数据库 migration 尚未执行。请检查 Vercel bootstrap 日志，或手动执行 supabase/migrations/202606020001_initial_release.sql。',
         })
       }
       return NextResponse.json({ error: error.message }, { status: 500 })

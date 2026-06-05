@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   const user = data.user
   if (!user) {
-    return loginRedirect(request, '登录失败：未返回用户会话。')
+    return loginRedirect(request, '登录失败：Supabase 未返回用户会话。')
   }
 
   const { data: existingAdminProfile, error: adminLookupError } = await supabase
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     if (!claimedAdmin) {
       await supabase.auth.signOut()
-      return loginRedirect(request, '您没有管理员权限。如果这是首次部署，请确认 admin_profiles 为空并已执行 supabase/migrations/202606020001_initial_release.sql。')
+      return loginRedirect(request, '您没有管理员权限。如果这是 Vercel 一键部署，请检查 bootstrap 日志；如果是手动部署，请确认 admin_profiles 为空且初始 migration 已执行。')
     }
 
     const { data: refreshedAdminProfile, error: refreshError } = await supabase
