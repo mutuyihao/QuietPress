@@ -13,7 +13,7 @@ export default async function TagsPage() {
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
-      <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground mb-12 sm:mb-16 tracking-tight">标签</h1>
+      <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground/85 mb-12 sm:mb-16 tracking-tight">标签</h1>
       
       {tags.length === 0 ? (
         <p className="text-muted-foreground text-[15px]">暂无标签。</p>
