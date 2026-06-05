@@ -79,8 +79,31 @@ export const storageSettingsSchema = z.object({
   storage_quota_mb: z.coerce.number().int().min(0).max(10_485_760).default(0),
 })
 
+export const adminPasswordSchema = z.object({
+  current_password: z.string().min(1, 'Current password is required'),
+  new_password: z.string().min(8, 'New password must be at least 8 characters'),
+  confirm_password: z.string().min(1, 'Please confirm the new password'),
+}).superRefine((value, ctx) => {
+  if (value.new_password !== value.confirm_password) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'New password and confirmation do not match',
+      path: ['confirm_password'],
+    })
+  }
+
+  if (value.current_password === value.new_password) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: 'New password must be different from the current password',
+      path: ['new_password'],
+    })
+  }
+})
+
 export type CreatePostInput = z.infer<typeof createPostSchema>
 export type UpdatePostInput = z.infer<typeof updatePostSchema>
 export type TagNameInput = z.infer<typeof tagNameSchema>
 export type SiteSettingsInput = z.infer<typeof siteSettingsSchema>
 export type StorageSettingsInput = z.infer<typeof storageSettingsSchema>
+export type AdminPasswordInput = z.infer<typeof adminPasswordSchema>

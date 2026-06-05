@@ -62,6 +62,7 @@ CI 使用占位 Supabase 环境变量。如果构建阶段需要真实 Supabase 
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=
+ADMIN_EMAIL=
 ```
 
 如果启用计划发布：

@@ -1,5 +1,9 @@
 # Gugu Blog
 
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fmutuyihao%2Fblog&project-name=gugu-blog&repository-name=gugu-blog&env=ADMIN_EMAIL&envDescription=Enter%20the%20email%20address%20for%20the%20first%20admin%20account.&stores=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22supabase%22%2C%22productSlug%22%3A%22supabase%22%7D%5D)
+
+Vercel one-click deployment creates/connects Supabase through Vercel Marketplace, runs the initial SQL migration during build, and creates the first admin from `ADMIN_EMAIL`. The temporary initial password is `GuguBlog@2026!`; change it at `/admin/account` after the first login.
+
 一个基于 Next.js App Router 和 Supabase 的个人博客系统，包含公开博客、后台管理、图片上传、评论审核、阅读统计、RSS、站点设置和多存储后端。
 
 ## 功能
@@ -39,6 +43,7 @@ pnpm dev
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ADMIN_EMAIL=admin@example.com
 ```
 
 可选配置：

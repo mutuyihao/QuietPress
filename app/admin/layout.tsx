@@ -47,6 +47,26 @@ async function AdminNav() {
   )
 }
 
+async function PasswordChangeNotice() {
+  const adminSession = await getAdminSession()
+  if (!adminSession?.user.user_metadata?.must_change_password) {
+    return null
+  }
+
+  return (
+    <div className="border-b border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+      <div className="mx-auto flex max-w-7xl flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <span>
+          This account is using the temporary deployment password. Change it before publishing the site.
+        </span>
+        <Link href="/admin/account" className="font-medium underline underline-offset-4">
+          Change password
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -55,6 +75,7 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-background">
       <AdminNav />
+      <PasswordChangeNotice />
       <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {children}
       </main>

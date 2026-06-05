@@ -8,8 +8,9 @@ export function getSupabaseUrl(): string {
 
 export function getSupabaseAnonKey(): string {
   const value = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
   if (!value) {
-    throw new Error('Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY')
+    throw new Error('Missing required environment variable: NEXT_PUBLIC_SUPABASE_ANON_KEY or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY')
   }
   return value
 }
@@ -21,4 +22,3 @@ export function getDefaultSiteUrl(): string {
 export function normalizeSiteUrl(url: string): string {
   return url.replace(/\/+$/, '')
 }
-

@@ -5,7 +5,7 @@ import { requireAdmin } from '@/lib/admin-auth'
 import { createRepositories } from '@/lib/db'
 import { createPostSlug, slugify, calculateReadingTime } from '@/lib/blog-utils'
 import { postPath } from '@/lib/route-segments'
-import { createPostSchema, updatePostSchema, tagNameSchema, siteSettingsSchema, storageSettingsSchema } from '@/lib/validation'
+import { createPostSchema, updatePostSchema, tagNameSchema, siteSettingsSchema, storageSettingsSchema, adminPasswordSchema } from '@/lib/validation'
 import { getStorageProviderEnvironmentStatus, resetStorageProvider } from '@/lib/storage'
 import type { PostStatus } from '@/lib/types'
 import type { Repositories } from '@/lib/db'
@@ -330,6 +330,52 @@ export async function updateStorageSettings(formData: FormData) {
   revalidatePath('/admin/posts/new')
   revalidatePath('/admin/posts/[id]', 'page')
   revalidateTag('settings', 'max')
+
+  return { success: true }
+}
+
+export async function updateAdminPassword(formData: FormData) {
+  const { supabase, user } = await requireAdmin()
+
+  const parsed = adminPasswordSchema.safeParse({
+    current_password: formData.get('current_password'),
+    new_password: formData.get('new_password'),
+    confirm_password: formData.get('confirm_password'),
+  })
+
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors.map((e) => e.message).join('; ') }
+  }
+
+  if (!user.email) {
+    return { success: false, error: 'Current user does not have an email address.' }
+  }
+
+  const { current_password, new_password } = parsed.data
+  const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    email: user.email,
+    password: current_password,
+  })
+
+  if (signInError || !signInData.user) {
+    return { success: false, error: 'Current password is incorrect.' }
+  }
+
+  const nextMetadata = {
+    ...(signInData.user.user_metadata || user.user_metadata || {}),
+    must_change_password: false,
+  }
+  const { error: updateError } = await supabase.auth.updateUser({
+    password: new_password,
+    data: nextMetadata,
+  })
+
+  if (updateError) {
+    return { success: false, error: updateError.message }
+  }
+
+  revalidatePath('/admin', 'layout')
+  revalidatePath('/admin/account')
 
   return { success: true }
 }

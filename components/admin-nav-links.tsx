@@ -41,6 +41,11 @@ const navItems = [
     label: '设置',
     isActive: (pathname: string) => pathname.startsWith('/admin/settings'),
   },
+  {
+    href: '/admin/account',
+    label: 'Account',
+    isActive: (pathname: string) => pathname.startsWith('/admin/account'),
+  },
 ]
 
 export function AdminNavLinks() {

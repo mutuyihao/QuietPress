@@ -39,6 +39,7 @@ supabase db push
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+ADMIN_EMAIL=admin@example.com
 ```
 
 `NEXT_PUBLIC_SITE_URL` 用于 RSS、Sitemap、JSON-LD、canonical URL 等绝对链接生成。本地默认可以使用 `http://localhost:3000`，生产环境应改成站点正式域名。
@@ -118,6 +119,17 @@ set email = excluded.email,
 ## 部署
 
 ### Vercel
+
+One-click path:
+
+1. Click the README "Deploy with Vercel" button.
+2. Let Vercel create/connect the Supabase Marketplace resource.
+3. Fill only `ADMIN_EMAIL` in the Vercel form.
+4. Vercel build runs `pnpm bootstrap:vercel` before `next build`, applying `supabase/migrations/202606020001_initial_release.sql` automatically.
+5. Sign in at `/auth/login` with `ADMIN_EMAIL` and the temporary password `GuguBlog@2026!`.
+6. Change the temporary password at `/admin/account`.
+
+Set `SKIP_SUPABASE_BOOTSTRAP=1` only when you need to bypass build-time migration/admin bootstrap for a specific deployment.
 
 1. 推送仓库到 GitHub。
 2. 在 Vercel 导入仓库。
