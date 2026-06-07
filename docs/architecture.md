@@ -44,6 +44,8 @@ docs/                 项目文档
 - `/admin/tags`: 标签管理。
 - `/admin/comments`: 评论审核。
 - `/admin/media`: 媒体库管理。
+- `/admin/migration`: QuietPress 迁移包导出、导入预检和执行导入。
+- `/admin/ai-access`: Remote MCP 启用、OAuth client 管理、授权撤销和 MCP 调用审计。
 - `/admin/storage`: 存储 provider、配额和用量。
 - `/admin/settings`: 站点设置、社交链接、关于页、上传压缩参数。
 
@@ -62,8 +64,18 @@ docs/                 项目文档
 - `GET/PATCH/DELETE /api/admin/comments`: 评论审核管理。
 - `GET /api/admin/analytics`: 后台统计。
 - `GET/DELETE /api/admin/media`: 媒体库。
+- `GET /api/admin/migration/export`: 导出 QuietPress v1 迁移包。
+- `POST /api/admin/migration/preview`: 解析迁移包并返回冲突预检，不写入数据。
+- `POST /api/admin/migration/import`: 按管理员选择写入迁移包内容。
 - `POST /api/admin/upload`: 图片上传。
 - `GET /api/admin/revisions`: 文章修订历史。
+- `GET/POST /api/mcp`: Remote MCP Streamable HTTP 入口。
+- `GET /.well-known/oauth-protected-resource`: MCP OAuth protected-resource metadata。
+- `GET /.well-known/oauth-authorization-server`: OAuth authorization-server metadata。
+- `POST /oauth/register`: OAuth Dynamic Client Registration。
+- `GET /oauth/authorize`: Authorization Code + PKCE 授权页。
+- `POST /oauth/token`: access token 和 refresh token 签发/轮换。
+- `POST /oauth/revoke`: token 撤销。
 
 ## 数据模型
 
@@ -78,6 +90,11 @@ docs/                 项目文档
 - `post_revisions`: 文章修订历史。
 - `comments`: 评论。
 - `newsletter_subscribers`: 邮件订阅者预留表。
+- `media_objects`: 媒体库对象记录。
+- `mcp_oauth_clients`: MCP OAuth client，包括手工登记和 DCR 自注册 client。
+- `mcp_oauth_authorization_codes`: PKCE 授权码，只保存 hash。
+- `mcp_oauth_tokens`: access/refresh token hash、resource、scope、过期和撤销状态。
+- `mcp_oauth_audit_logs`: MCP tool 调用审计。
 
 核心 RPC：
 
@@ -114,6 +131,21 @@ Markdown 由 `lib/blog-utils.ts` 处理：
 - 允许 JPEG、PNG、WebP、GIF。
 - 禁止 SVG 上传。
 
+## AI / MCP
+
+MCP 相关代码位于 `lib/mcp` 和 `app/api/mcp`：
+
+- `app/api/mcp/route.ts`: MCP Streamable HTTP JSON-RPC 入口，处理 initialize、tools、resources 和 prompts。
+- `lib/mcp/tools.ts`: MCP tools/resources/prompts 定义和 scope 校验。
+- `lib/mcp/store.ts`: OAuth client、authorization code、token、audit log 的持久化访问。
+- `lib/mcp/oauth.ts`: OAuth resource、redirect URI、scope 和 DCR 兼容校验。
+- `app/oauth/*`: OAuth authorize/token/revoke/register 端点。
+- `app/admin/ai-access`: 后台启用、client 管理、grant 撤销和审计查看。
+
+Remote MCP 默认关闭。启用后，客户端通过 `/api/mcp` 访问，未授权请求会收到 `WWW-Authenticate`，再通过 metadata discovery 找到 OAuth authorization server。标准客户端可使用 `/oauth/register` 动态注册 public client；不支持 DCR 的客户端可以在后台手工创建 OAuth client。
+
+MCP tool 不直接绕过权限层：每次调用都要求有效 Bearer token、精确匹配的 `resource` audience、管理员仍存在、client 未禁用、scope 满足工具要求。写操作会调用统一 blog service 层，并在内容变更后执行缓存再验证。
+
 ## 缓存与再验证
 
 - 公开文章、标签、设置使用 `unstable_cache` 和 cache tags。
@@ -132,6 +164,11 @@ Markdown 由 `lib/blog-utils.ts` 处理：
 - 上传端 MIME 内容校验，禁止 SVG。
 - `next.config.mjs` 配置 CSP、HSTS、X-Frame-Options、Referrer-Policy、Permissions-Policy 等安全头。
 - Cron 路由必须携带 `Authorization: Bearer <CRON_SECRET>`。
+- Remote MCP 默认关闭；启用后只接受 `Authorization` header 中的 Bearer token，不接受 query token。
+- MCP OAuth access token 和 refresh token 只保存 hash，access token 短期有效，refresh token 轮换。
+- MCP OAuth `resource` 必须精确匹配当前站点 `/api/mcp`，防止错误 audience token 被复用。
+- MCP 高风险工具要求 `confirm: true` 和 `idempotency_key`。
+- MCP 媒体 URL 上传执行 SSRF 防护、图片 MIME 校验、大小限制和超时控制。
 
 ## 部署
 

@@ -13,6 +13,8 @@ English summary: QuietPress is a one-click deployable personal blog CMS built wi
 - 公开站点：分页文章列表、文章详情、标签页、关于页、RSS、Sitemap、Robots。
 - 内容渲染：Markdown 渲染、HTML 消毒、文章目录、代码块增强、相关文章、分享按钮。
 - 后台管理：文章 CRUD、草稿/发布/归档、批量发布/归档/删除、标签管理、评论审核、媒体库、存储管理、站点设置。
+- 迁移工具：导出/导入 QuietPress v1 迁移包，支持文章、标签、站点设置和媒体 URL 重拉。
+- AI 操作：内置 Remote MCP 服务，支持 OAuth PKCE、Dynamic Client Registration、scope 授权、审计和撤销。
 - 上传与存储：默认使用 Supabase Storage，也支持 S3 兼容服务和 Cloudflare R2。
 - 数据与安全：Supabase Auth、RLS、单管理员启动流程、Zod 输入校验、评论服务端消毒、基础限流、安全响应头、Cron 密钥保护。
 - 运维准备：GitHub Actions CI、Docker standalone 镜像、`/api/health` 健康检查。
@@ -80,6 +82,7 @@ docker run --env-file .env.local -p 3000:3000 quietpress
 ## 文档
 
 - [docs/setup.md](docs/setup.md): 本地开发、Supabase 初始化、Vercel 一键部署、Docker 和故障排查。
+- [docs/ai-mcp-access.md](docs/ai-mcp-access.md): AI/MCP 操作博客的功能说明、OAuth 接入、客户端配置和安全指南。
 - [docs/architecture.md](docs/architecture.md): 架构、路由、数据模型、缓存、安全边界、部署模型和已知限制。
 - [docs/release-checklist.md](docs/release-checklist.md): 发布门禁和部署后 smoke test。
 - [CHANGELOG.md](CHANGELOG.md): 版本记录。

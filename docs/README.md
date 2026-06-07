@@ -3,6 +3,7 @@
 当前文档按用途分层：
 
 - [setup.md](setup.md): 本地开发、Supabase 初始化、首次管理员、Vercel、Docker 和故障排查。
+- [ai-mcp-access.md](ai-mcp-access.md): AI/MCP 操作博客的功能说明、OAuth 接入、客户端配置、安全行为和故障排查。
 - [architecture.md](architecture.md): 当前代码结构、路由、数据模型、安全边界、部署模型和已知限制。
 - [release-checklist.md](release-checklist.md): 发布门禁和部署后 smoke test。
 - [project-audit.md](project-audit.md): 历史审计记录。

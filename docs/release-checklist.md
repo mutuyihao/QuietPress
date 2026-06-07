@@ -10,6 +10,7 @@
 - [ ] `pnpm build` 通过。
 - [ ] `/api/health` 在目标环境返回 `healthy`。
 - [ ] Vercel 一键部署 bootstrap 成功，或手动 Supabase migration 已执行。
+- [ ] 如果启用 AI/MCP，确认 `/admin/ai-access` 可打开，`/.well-known/oauth-authorization-server` 包含 `registration_endpoint`。
 - [ ] 第一个管理员可以登录 `/admin`。
 - [ ] Vercel bootstrap 创建的临时密码已在 `/admin/account` 修改。
 - [ ] 上传图片、发布文章、评论审核、站点设置保存均通过手动 smoke test。
@@ -44,6 +45,12 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=
 ADMIN_EMAIL=
+```
+
+如果启用 AI/MCP、Vercel bootstrap 或服务端后台操作，需要服务端 Supabase secret：
+
+```env
+SUPABASE_SERVICE_ROLE_KEY=
 ```
 
 Vercel Supabase Marketplace 也可能使用新版变量名：
@@ -81,6 +88,8 @@ S3_REGION=
 - QuietPress 是 Next.js + Supabase 个人博客 CMS 模板。
 - 包含公开文章、标签、关于页、RSS、Sitemap 和后台管理。
 - 后台支持文章、标签、评论、媒体、存储设置和站点设置。
+- 后台支持迁移包导入/导出和 AI/MCP 授权管理。
+- Remote MCP 支持 OAuth PKCE、Dynamic Client Registration、scope 授权、审计和撤销。
 - 图片上传支持 Supabase Storage、S3 兼容服务和 Cloudflare R2。
 - Vercel 一键部署可以自动初始化 Supabase 和第一个管理员账号。
 - 包含 Docker 和 GitHub Actions CI。
@@ -107,3 +116,6 @@ S3_REGION=
 - [ ] 评论提交进入 `pending`。
 - [ ] 后台可以审核评论。
 - [ ] `/api/health` 返回 `healthy`。
+- [ ] 如果启用 AI/MCP，未登录访问 `/api/mcp` 返回 `401` 和 `WWW-Authenticate`。
+- [ ] 如果启用 AI/MCP，DCR 注册后后台 OAuth Clients 出现 dynamic client。
+- [ ] 如果启用 AI/MCP，使用 MCP 客户端完成读取文章或创建草稿的 smoke test。

@@ -8,6 +8,8 @@
 - Markdown rendering with HTML sanitization, table of contents, enhanced code blocks, related posts, and share action.
 - Admin dashboard with post management, status workflow, batch actions, analytics cards, and trend charts.
 - Admin pages for tags, comments, media library, storage provider settings, and site settings.
+- Admin migration page and QuietPress v1 import/export APIs for posts, tags, settings, and media URL manifests.
+- Admin AI Access page and Remote MCP server with OAuth PKCE, Dynamic Client Registration, scopes, grants, and audit logs.
 - Supabase Auth first-admin bootstrap and RLS-backed data access.
 - Comments with pending moderation and server-side sanitization.
 - Newsletter subscription endpoint and data model are retained for future email notifications; public entry is currently hidden until outbound email is implemented.
