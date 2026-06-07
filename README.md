@@ -4,7 +4,7 @@
 
 QuietPress 是一个基于 Next.js App Router 和 Supabase 的个人博客 CMS 模板，支持 Vercel 一键部署。它包含公开博客、后台管理、Markdown 写作、图片上传、评论审核、阅读统计、RSS、Sitemap、站点设置和多存储后端。
 
-Vercel Deploy Button 会通过 Vercel Marketplace 创建或连接 Supabase，并在构建阶段自动执行初始数据库迁移、创建第一个管理员账号。部署时只需要填写 `ADMIN_EMAIL`。初始临时密码为 `QuietPress@2026!`，首次登录后请到 `/admin/account` 修改。
+Vercel Deploy Button 会通过 Vercel Marketplace 创建或连接 Supabase，并在构建阶段按文件名顺序自动执行 `supabase/migrations/*.sql`、创建第一个管理员账号。部署时只需要填写 `ADMIN_EMAIL`。初始临时密码为 `QuietPress@2026!`，首次登录后请到 `/admin/account` 修改。
 
 English summary: QuietPress is a one-click deployable personal blog CMS built with Next.js and Supabase.
 
@@ -90,6 +90,10 @@ docker run --env-file .env.local -p 3000:3000 quietpress
 ## 模板说明
 
 Deploy Button 的 `repository-url` 必须写死 canonical 仓库地址，Vercel 不会自动识别用户当前 fork。如果仓库迁移或改名，需要同步更新按钮 URL。
+
+Deploy Button 是快照式一键部署：Vercel 会把 canonical 仓库克隆/复制到部署者自己的 Git 账号，再把 Vercel Project 连接到这个新仓库。这个新仓库不会天然跟随 `mutuyihao/blog` 的后续更新；只有部署者仓库本身产生新 commit 时，Vercel 才会自动重新构建。
+
+如果希望部署后继续获取源仓库更新，推荐使用“可持续更新部署”路径：先 fork `mutuyihao/blog`，再在 Vercel 里导入自己的 fork。复制仓库或 fork 里可以启用 `.github/workflows/sync-upstream.yml`：它会定期或手动从 canonical 仓库 fast-forward 同步 `main`，同步成功后 push 到自己的仓库，Vercel 会因该 push 自动重建。该 workflow 只做 `--ff-only`，不会强行覆盖部署者自己的改动。
 
 QuietPress 当前有意保持单管理员模式，不包含多作者、多管理员、角色权限、邀请机制、邮件订阅发送、修订历史 diff/restore。
 

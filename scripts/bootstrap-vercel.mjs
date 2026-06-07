@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readdir, readFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -6,11 +6,10 @@ const INITIAL_ADMIN_PASSWORD = 'QuietPress@2026!'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const rootDir = path.resolve(dirname, '..')
-const migrationPath = path.join(
+const migrationsDir = path.join(
   rootDir,
   'supabase',
   'migrations',
-  '202606020001_initial_release.sql',
 )
 
 function env(key) {
@@ -84,7 +83,14 @@ async function findUserByEmail(supabase, email) {
 
 async function runMigration(databaseUrl) {
   const { default: postgres } = await import('postgres')
-  const migrationSql = await readFile(migrationPath, 'utf8')
+  const migrationFiles = (await readdir(migrationsDir))
+    .filter((fileName) => fileName.endsWith('.sql'))
+    .sort()
+
+  if (migrationFiles.length === 0) {
+    throw new Error(`No SQL migrations found in ${migrationsDir}.`)
+  }
+
   const sql = postgres(databaseUrl, {
     max: 1,
     prepare: false,
@@ -93,7 +99,12 @@ async function runMigration(databaseUrl) {
   })
 
   try {
-    await sql.unsafe(migrationSql)
+    for (const fileName of migrationFiles) {
+      const migrationPath = path.join(migrationsDir, fileName)
+      const migrationSql = await readFile(migrationPath, 'utf8')
+      console.log(`[bootstrap] Applying migration ${fileName}.`)
+      await sql.unsafe(migrationSql)
+    }
   } finally {
     await sql.end({ timeout: 5 })
   }

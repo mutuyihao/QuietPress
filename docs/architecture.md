@@ -138,11 +138,18 @@ Markdown 由 `lib/blog-utils.ts` 处理：
 Vercel 一键部署：
 
 - 使用 README 的 Deploy Button。
+- Deploy Button 会复制 canonical 仓库到部署者自己的 Git 账号；该副本不是 upstream 跟踪仓库。
 - 通过 Vercel Marketplace 创建或连接 Supabase。
 - 在 `next build` 前运行 `pnpm bootstrap:vercel`。
-- 自动执行 `supabase/migrations/202606020001_initial_release.sql`。
+- 按文件名顺序自动执行 `supabase/migrations/*.sql`。
 - 使用 `ADMIN_EMAIL` 创建第一个管理员。
 - 初始临时密码为 `QuietPress@2026!`，必须在 `/admin/account` 修改。
+
+可持续更新部署：
+
+- 推荐 fork canonical 仓库后在 Vercel 导入 fork。
+- 复制仓库或 fork 可以使用 `.github/workflows/sync-upstream.yml` 从 canonical 仓库 fast-forward 同步 `main`。
+- 同步 workflow 不做强推；如果部署者自己的提交导致无法 fast-forward，需要人工合并。
 
 GitHub Actions：
 
