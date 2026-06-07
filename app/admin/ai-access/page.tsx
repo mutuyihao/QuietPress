@@ -67,7 +67,7 @@ export default async function AdminAiAccessPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-amber-950">
-            请在服务端环境变量中配置 <code>SUPABASE_SERVICE_ROLE_KEY</code>，并执行最新 Supabase 数据库迁移。
+            请在服务端环境变量中配置 <code>SUPABASE_SERVICE_ROLE_KEY</code> 或 <code>SUPABASE_SECRET_KEY</code>，并执行最新 Supabase 数据库迁移。
           </CardContent>
         </Card>
       ) : (

@@ -17,8 +17,9 @@ export function getSupabaseAnonKey(): string {
 
 export function getSupabaseServiceRoleKey(): string {
   const value = process.env.SUPABASE_SERVICE_ROLE_KEY
+    || process.env.SUPABASE_SECRET_KEY
   if (!value) {
-    throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY')
+    throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY')
   }
   return value
 }

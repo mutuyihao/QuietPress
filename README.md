@@ -46,11 +46,12 @@ pnpm dev
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ADMIN_EMAIL=admin@example.com
 ```
 
-Vercel Supabase Marketplace 可能注入新版变量名 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 和 `SUPABASE_SECRET_KEY`。QuietPress 同时兼容新旧 Supabase key 命名。
+`NEXT_PUBLIC_SUPABASE_ANON_KEY` 可用 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 替代；`SUPABASE_SERVICE_ROLE_KEY` 可用 `SUPABASE_SECRET_KEY` 替代。QuietPress 同时兼容新旧 Supabase key 命名。
 
 可选配置：
 
@@ -59,6 +60,7 @@ Vercel Supabase Marketplace 可能注入新版变量名 `NEXT_PUBLIC_SUPABASE_PU
 - `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_PUBLIC_URL_BASE`: S3/R2 上传必需。
 - `S3_REGION`: 可选，默认 `auto`。
 - `CRON_SECRET`: 保护 `/api/cron/publish-scheduled`。
+- `POSTGRES_URL_NON_POOLING`: Vercel bootstrap 执行数据库迁移必需，通常由 Vercel Supabase Marketplace 自动注入。
 - `SKIP_SUPABASE_BOOTSTRAP=1`: 临时跳过 Vercel 构建期迁移和管理员初始化，仅用于排障。
 
 完整说明见 [.env.example](.env.example)。

@@ -42,22 +42,27 @@ CI 使用占位 Supabase 环境变量。如果后续构建阶段需要真实 Sup
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_SITE_URL=
-ADMIN_EMAIL=
 ```
 
-如果启用 AI/MCP、Vercel bootstrap 或服务端后台操作，需要服务端 Supabase secret：
+Supabase public key 二选一：
+
+```env
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+```
+
+服务端 Supabase secret 二选一。AI/MCP、OAuth、DCR、审计和 Vercel bootstrap 需要：
 
 ```env
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_SECRET_KEY=
 ```
 
-Vercel Supabase Marketplace 也可能使用新版变量名：
+Vercel bootstrap 需要，通常由 Vercel Supabase Marketplace 自动注入：
 
 ```env
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SECRET_KEY=
+ADMIN_EMAIL=
 POSTGRES_URL_NON_POOLING=
 ```
 
