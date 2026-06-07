@@ -29,15 +29,26 @@ export const MCP_SCOPE_LABELS: Record<McpScope, string> = {
 }
 
 const MCP_SCOPE_SET = new Set<string>(MCP_SCOPES)
+const OAUTH_COMPATIBILITY_SCOPES = new Set(['offline_access'])
 
-export function parseScopeString(value: string | null | undefined): McpScope[] {
+export function splitScopeString(value: string | null | undefined): string[] {
   if (!value) return []
   return Array.from(new Set(
     value
       .split(/\s+/)
       .map((scope) => scope.trim())
-      .filter((scope): scope is McpScope => MCP_SCOPE_SET.has(scope)),
+      .filter(Boolean),
   ))
+}
+
+export function parseScopeString(value: string | null | undefined): McpScope[] {
+  return Array.from(new Set(
+    splitScopeString(value).filter((scope): scope is McpScope => MCP_SCOPE_SET.has(scope)),
+  ))
+}
+
+export function getUnknownMcpScopes(value: string | null | undefined): string[] {
+  return splitScopeString(value).filter((scope) => !MCP_SCOPE_SET.has(scope) && !OAUTH_COMPATIBILITY_SCOPES.has(scope))
 }
 
 export function normalizeScopes(scopes: Iterable<string>): McpScope[] {

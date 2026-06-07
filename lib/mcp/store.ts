@@ -1,10 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { createOpaqueToken, hashToken, verifyPkceS256 } from '@/lib/mcp/crypto'
-import { MCP_SCOPES, assertKnownScopes, normalizeScopes, parseScopeString, type McpScope } from '@/lib/mcp/scopes'
+import { MCP_SCOPES, assertKnownScopes, normalizeScopes, type McpScope } from '@/lib/mcp/scopes'
+import {
+  MCP_DEFAULT_GRANT_TYPES,
+  MCP_DEFAULT_RESPONSE_TYPES,
+  MCP_TOKEN_AUTH_METHOD,
+  normalizeOAuthScopes,
+} from '@/lib/mcp/oauth'
 
 export const MCP_ACCESS_TOKEN_TTL_SECONDS = 15 * 60
 export const MCP_REFRESH_TOKEN_TTL_SECONDS = 30 * 24 * 60 * 60
 const MCP_AUTH_CODE_TTL_SECONDS = 10 * 60
+
+export type McpClientRegistrationType = 'manual' | 'dynamic'
 
 export interface McpClientRecord {
   id: string
@@ -12,6 +20,14 @@ export interface McpClientRecord {
   name: string
   redirect_uris: string[]
   scopes: McpScope[]
+  registration_type: McpClientRegistrationType
+  client_uri: string | null
+  logo_uri: string | null
+  contacts: string[]
+  token_endpoint_auth_method: string
+  grant_types: string[]
+  response_types: string[]
+  client_metadata: Record<string, unknown>
   enabled: boolean
   created_by: string | null
   created_at: string
@@ -82,12 +98,30 @@ function toStringArray(value: unknown): string[] {
 }
 
 function mapClient(row: Record<string, unknown>): McpClientRecord {
+  const registrationType = row.registration_type === 'dynamic' ? 'dynamic' : 'manual'
+
   return {
     id: String(row.id),
     client_id: String(row.client_id),
     name: String(row.name),
     redirect_uris: toStringArray(row.redirect_uris),
     scopes: normalizeScopes(toStringArray(row.scopes)),
+    registration_type: registrationType,
+    client_uri: typeof row.client_uri === 'string' ? row.client_uri : null,
+    logo_uri: typeof row.logo_uri === 'string' ? row.logo_uri : null,
+    contacts: toStringArray(row.contacts),
+    token_endpoint_auth_method: typeof row.token_endpoint_auth_method === 'string'
+      ? row.token_endpoint_auth_method
+      : MCP_TOKEN_AUTH_METHOD,
+    grant_types: toStringArray(row.grant_types).length > 0
+      ? toStringArray(row.grant_types)
+      : [...MCP_DEFAULT_GRANT_TYPES],
+    response_types: toStringArray(row.response_types).length > 0
+      ? toStringArray(row.response_types)
+      : [...MCP_DEFAULT_RESPONSE_TYPES],
+    client_metadata: row.client_metadata && typeof row.client_metadata === 'object'
+      ? row.client_metadata as Record<string, unknown>
+      : {},
     enabled: Boolean(row.enabled),
     created_by: typeof row.created_by === 'string' ? row.created_by : null,
     created_at: String(row.created_at),
@@ -170,11 +204,22 @@ export async function createMcpClient(
     name: string
     redirectUris: string[]
     scopes: string[]
-    createdBy: string
+    createdBy?: string | null
+    registrationType?: McpClientRegistrationType
+    clientUri?: string | null
+    logoUri?: string | null
+    contacts?: string[]
+    tokenEndpointAuthMethod?: string
+    grantTypes?: readonly string[]
+    responseTypes?: readonly string[]
+    clientMetadata?: Record<string, unknown>
   },
 ): Promise<McpClientRecord> {
   const scopes = assertKnownScopes(input.scopes.length > 0 ? input.scopes : [...MCP_SCOPES])
-  const clientId = `qp_${createOpaqueToken(24)}`
+  const registrationType = input.registrationType || 'manual'
+  const clientId = registrationType === 'dynamic'
+    ? `qp_dcr_${createOpaqueToken(24)}`
+    : `qp_${createOpaqueToken(24)}`
 
   const { data, error } = await supabase
     .from('mcp_oauth_clients')
@@ -183,7 +228,15 @@ export async function createMcpClient(
       name: input.name,
       redirect_uris: input.redirectUris,
       scopes,
-      created_by: input.createdBy,
+      registration_type: registrationType,
+      client_uri: input.clientUri ?? null,
+      logo_uri: input.logoUri ?? null,
+      contacts: input.contacts || [],
+      token_endpoint_auth_method: input.tokenEndpointAuthMethod || MCP_TOKEN_AUTH_METHOD,
+      grant_types: input.grantTypes || [...MCP_DEFAULT_GRANT_TYPES],
+      response_types: input.responseTypes || [...MCP_DEFAULT_RESPONSE_TYPES],
+      client_metadata: input.clientMetadata || {},
+      created_by: input.createdBy ?? null,
     })
     .select('*')
     .single()
@@ -515,8 +568,7 @@ export function scopesToString(scopes: readonly string[]): string {
 }
 
 export function requestedScopesWithinClient(requested: string, client: McpClientRecord): McpScope[] {
-  const scopes = parseScopeString(requested)
-  const selected = scopes.length > 0 ? scopes : client.scopes
+  const selected = normalizeOAuthScopes(requested, client.scopes)
   const disallowed = selected.filter((scope) => !client.scopes.includes(scope))
 
   if (disallowed.length > 0) {

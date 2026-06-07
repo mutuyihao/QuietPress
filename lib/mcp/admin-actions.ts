@@ -10,30 +10,17 @@ import {
   setMcpClientEnabled,
   setMcpEnabled,
 } from '@/lib/mcp/store'
+import { normalizeOAuthRedirectUris } from '@/lib/mcp/oauth'
 import { MCP_SCOPES, normalizeScopes } from '@/lib/mcp/scopes'
 
 function parseRedirectUris(value: FormDataEntryValue | null): string[] {
   const raw = String(value || '')
-  const uris = Array.from(new Set(
+  return normalizeOAuthRedirectUris(
     raw
       .split(/\r?\n|,/)
       .map((item) => item.trim())
       .filter(Boolean),
-  ))
-
-  if (uris.length === 0) {
-    throw new Error('At least one redirect URI is required.')
-  }
-
-  for (const uri of uris) {
-    const parsed = new URL(uri)
-    const isLocalhost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1'
-    if (parsed.protocol !== 'https:' && !(isLocalhost && parsed.protocol === 'http:')) {
-      throw new Error(`Redirect URI must be HTTPS or localhost HTTP: ${uri}`)
-    }
-  }
-
-  return uris
+  )
 }
 
 function getSelectedScopes(formData: FormData): string[] {

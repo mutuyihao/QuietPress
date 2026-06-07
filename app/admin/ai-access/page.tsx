@@ -76,7 +76,7 @@ export default async function AdminAiAccessPage() {
             <CardHeader>
               <CardTitle>Remote MCP</CardTitle>
               <CardDescription>
-                Keep this disabled until OAuth clients and redirect URIs are reviewed.
+                Keep this disabled until OAuth clients, scopes, and audit expectations are reviewed.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -87,7 +87,7 @@ export default async function AdminAiAccessPage() {
                     Status: {data?.enabled ? 'Enabled' : 'Disabled'}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Endpoint: <code>/api/mcp</code>
+                    Endpoint: <code>/api/mcp</code> - DCR: <code>/oauth/register</code>
                   </p>
                 </div>
                 <Button type="submit" variant={data?.enabled ? 'destructive' : 'default'}>
@@ -101,7 +101,7 @@ export default async function AdminAiAccessPage() {
             <CardHeader>
               <CardTitle>Create OAuth Client</CardTitle>
               <CardDescription>
-                Public OAuth clients use Authorization Code + PKCE. Redirect URIs must match exactly.
+                Manual clients use Authorization Code + PKCE. Standards-based MCP clients can also self-register through Dynamic Client Registration.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -154,6 +154,9 @@ export default async function AdminAiAccessPage() {
                         <p className="font-medium text-foreground">{client.name}</p>
                         <p className="break-all text-xs text-muted-foreground">{client.client_id}</p>
                       </div>
+                      <p className="text-xs text-muted-foreground">
+                        Registration: {client.registration_type === 'dynamic' ? 'Dynamic Client Registration' : 'Manual'}
+                      </p>
                       <p className="break-all text-xs text-muted-foreground">
                         Redirects: {client.redirect_uris.join(', ')}
                       </p>
@@ -189,7 +192,7 @@ export default async function AdminAiAccessPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-foreground">{token.client?.name || token.client_id}</p>
                     <p className="text-xs text-muted-foreground">
-                      Expires {formatDate(token.expires_at)} · Last used {formatDate(token.last_used_at)}
+                      Expires {formatDate(token.expires_at)} - Last used {formatDate(token.last_used_at)}
                     </p>
                     <p className="mt-1 break-all text-xs text-muted-foreground">{token.scopes.join(' ')}</p>
                   </div>
@@ -216,13 +219,13 @@ export default async function AdminAiAccessPage() {
                 <div key={log.id} className="rounded-lg border border-border px-3 py-2 text-sm">
                   <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                     <p className="font-medium text-foreground">
-                      {log.tool_name} · {log.status}
+                      {log.tool_name} - {log.status}
                     </p>
                     <p className="text-xs text-muted-foreground">{formatDate(log.created_at)}</p>
                   </div>
                   {log.error && <p className="mt-1 text-xs text-destructive">{log.error}</p>}
                   <p className="mt-1 break-all text-xs text-muted-foreground">
-                    request {log.request_id} · client {log.client_id || 'unknown'}
+                    request {log.request_id} - client {log.client_id || 'unknown'}
                   </p>
                 </div>
               ))}

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { exchangeAuthorizationCode, getMcpClientByClientId, getMcpEnabled, rotateRefreshToken, scopesToString } from '@/lib/mcp/store'
+import { assertMcpResource, getMcpResourceUrl, isRegisteredRedirectUri } from '@/lib/mcp/oauth'
 import { createServiceClient } from '@/lib/supabase/service'
 
 export const runtime = 'nodejs'
@@ -12,7 +13,7 @@ function oauthError(error: string, description: string, status = 400) {
 }
 
 function getResource(request: NextRequest, value: string | null): string {
-  return value || `${request.nextUrl.origin}/api/mcp`
+  return value || getMcpResourceUrl(request.nextUrl.origin)
 }
 
 export async function POST(request: NextRequest) {
@@ -23,6 +24,11 @@ export async function POST(request: NextRequest) {
     const resource = getResource(request, String(formData.get('resource') || ''))
 
     if (!clientId) return oauthError('invalid_request', 'client_id is required')
+    try {
+      assertMcpResource(request.nextUrl.origin, resource)
+    } catch (error) {
+      return oauthError('invalid_target', error instanceof Error ? error.message : 'Invalid resource')
+    }
 
     const service = createServiceClient()
     const enabled = await getMcpEnabled(service)
@@ -39,7 +45,7 @@ export async function POST(request: NextRequest) {
       if (!code || !redirectUri || !codeVerifier) {
         return oauthError('invalid_request', 'code, redirect_uri, and code_verifier are required')
       }
-      if (!client.redirect_uris.includes(redirectUri)) {
+      if (!isRegisteredRedirectUri(redirectUri, client.redirect_uris)) {
         return oauthError('invalid_grant', 'redirect_uri is not registered for this client')
       }
 

@@ -3,6 +3,7 @@
 import { redirect } from 'next/navigation'
 import { requireAdmin } from '@/lib/admin-auth'
 import { createAuthorizationCode, getMcpClientByClientId, getMcpEnabled, requestedScopesWithinClient } from '@/lib/mcp/store'
+import { assertMcpResource, isRegisteredRedirectUri } from '@/lib/mcp/oauth'
 import type { McpScope } from '@/lib/mcp/scopes'
 import { createServiceClient } from '@/lib/supabase/service'
 
@@ -43,12 +44,13 @@ export async function approveMcpAuthorizationAction(formData: FormData) {
   if (codeChallengeMethod !== 'S256') {
     throw new Error('Only PKCE S256 is supported.')
   }
+  assertMcpResource(new URL(resource).origin, resource)
 
   const client = await getMcpClientByClientId(service, clientId)
   if (!client || !client.enabled) {
     throw new Error('OAuth client is not available.')
   }
-  if (!client.redirect_uris.includes(redirectUri)) {
+  if (!isRegisteredRedirectUri(redirectUri, client.redirect_uris)) {
     throw new Error('Redirect URI is not registered for this client.')
   }
 

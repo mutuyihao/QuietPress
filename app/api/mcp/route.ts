@@ -10,6 +10,8 @@ import {
   readMcpResource,
 } from '@/lib/mcp/tools'
 import { getMcpEnabled, insertMcpAuditLog, validateMcpAccessToken, type McpAccessContext } from '@/lib/mcp/store'
+import { getMcpResourceUrl } from '@/lib/mcp/oauth'
+import { MCP_SCOPES } from '@/lib/mcp/scopes'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getClientIp, checkRateLimit } from '@/lib/rate-limit'
 import { sha256 } from '@/lib/mcp/crypto'
@@ -29,7 +31,7 @@ interface JsonRpcRequest {
 }
 
 function getResourceUrl(request: NextRequest): string {
-  return `${request.nextUrl.origin}/api/mcp`
+  return getMcpResourceUrl(request.nextUrl.origin)
 }
 
 function unauthorized(request: NextRequest, message = 'Unauthorized') {
@@ -39,7 +41,7 @@ function unauthorized(request: NextRequest, message = 'Unauthorized') {
     {
       status: 401,
       headers: {
-        'WWW-Authenticate': `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`,
+        'WWW-Authenticate': `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource", scope="${MCP_SCOPES.join(' ')}"`,
       },
     },
   )

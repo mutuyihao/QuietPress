@@ -2,6 +2,7 @@ import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { approveMcpAuthorizationAction } from '@/lib/mcp/oauth-actions'
 import { getMcpClientByClientId, getMcpEnabled, requestedScopesWithinClient } from '@/lib/mcp/store'
+import { assertMcpResource, getMcpResourceUrl, isRegisteredRedirectUri } from '@/lib/mcp/oauth'
 import { createServiceClient } from '@/lib/supabase/service'
 import { getDefaultSiteUrl } from '@/lib/env'
 import { getAdminSession } from '@/lib/admin-auth'
@@ -39,7 +40,7 @@ function getAuthorizePath(params: Record<string, string | undefined>): string {
 export default async function OAuthAuthorizePage({ searchParams }: AuthorizePageProps) {
   const params = await searchParams
   const origin = await getRequestOrigin()
-  const resource = params?.resource || `${origin.replace(/\/+$/, '')}/api/mcp`
+  const resource = params?.resource || getMcpResourceUrl(origin)
   const session = await getAdminSession()
 
   if (!session) {
@@ -61,10 +62,11 @@ export default async function OAuthAuthorizePage({ searchParams }: AuthorizePage
     if (!params?.redirect_uri) throw new Error('redirect_uri is required.')
     if (!params?.code_challenge) throw new Error('code_challenge is required.')
     if (params?.code_challenge_method !== 'S256') throw new Error('Only code_challenge_method=S256 is supported.')
+    assertMcpResource(origin, resource)
 
     const client = await getMcpClientByClientId(service, params.client_id)
     if (!client || !client.enabled) throw new Error('OAuth client is not available.')
-    if (!client.redirect_uris.includes(params.redirect_uri)) {
+    if (!isRegisteredRedirectUri(params.redirect_uri, client.redirect_uris)) {
       throw new Error('redirect_uri is not registered for this client.')
     }
 
