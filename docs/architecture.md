@@ -44,7 +44,7 @@ docs/                 项目文档
 - `/admin/tags`: 标签管理。
 - `/admin/comments`: 评论审核。
 - `/admin/media`: 媒体库管理。
-- `/admin/migration`: QuietPress 迁移包导出、导入预检和执行导入。
+- `/admin/settings/migration`: QuietPress 迁移包导出、导入预检和执行导入。
 - `/admin/ai-access`: Remote MCP 启用、OAuth client 管理、授权撤销和 MCP 调用审计。
 - `/admin/storage`: 存储 provider、配额和用量。
 - `/admin/settings`: 站点设置、社交链接、关于页、上传压缩参数。

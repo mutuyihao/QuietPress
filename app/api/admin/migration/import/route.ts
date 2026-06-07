@@ -13,6 +13,7 @@ function revalidateImportedContent() {
   revalidatePath('/')
   revalidatePath('/admin')
   revalidatePath('/admin/migration')
+  revalidatePath('/admin/settings/migration')
   revalidatePath('/admin/tags')
   revalidatePath('/about')
   revalidatePath('/tags')

@@ -42,19 +42,9 @@ const navItems = [
     isActive: (pathname: string) => pathname.startsWith('/admin/settings'),
   },
   {
-    href: '/admin/migration',
-    label: '迁移',
-    isActive: (pathname: string) => pathname.startsWith('/admin/migration'),
-  },
-  {
     href: '/admin/ai-access',
     label: 'AI',
     isActive: (pathname: string) => pathname.startsWith('/admin/ai-access'),
-  },
-  {
-    href: '/admin/account',
-    label: '账号',
-    isActive: (pathname: string) => pathname.startsWith('/admin/account'),
   },
 ]
 

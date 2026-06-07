@@ -15,17 +15,17 @@ export const MCP_SCOPES = [
 export type McpScope = (typeof MCP_SCOPES)[number]
 
 export const MCP_SCOPE_LABELS: Record<McpScope, string> = {
-  'posts:read': 'Read posts',
-  'posts:write': 'Create and edit posts',
-  'posts:publish': 'Publish and archive posts',
-  'posts:delete': 'Delete posts',
-  'tags:write': 'Manage tags',
-  'media:write': 'Upload media',
-  'comments:moderate': 'Moderate comments',
-  'settings:write': 'Update public site settings',
-  'migration:read': 'Export migration packages',
-  'migration:write': 'Import migration packages',
-  'analytics:read': 'Read analytics summaries',
+  'posts:read': '读取文章',
+  'posts:write': '创建和编辑文章',
+  'posts:publish': '发布和下线文章',
+  'posts:delete': '删除文章',
+  'tags:write': '管理标签',
+  'media:write': '上传媒体',
+  'comments:moderate': '审核评论',
+  'settings:write': '更新公开站点设置',
+  'migration:read': '导出迁移包',
+  'migration:write': '导入迁移包',
+  'analytics:read': '读取统计摘要',
 }
 
 const MCP_SCOPE_SET = new Set<string>(MCP_SCOPES)

@@ -1,7 +1,16 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import { LogOut, UserCircle } from 'lucide-react'
 
 import { AdminNavLinks } from '@/components/admin-nav-links'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Toaster } from '@/components/ui/sonner'
 import { getAdminSession } from '@/lib/admin-auth'
 
@@ -22,10 +31,7 @@ async function AdminNav() {
           <AdminNavLinks />
         </div>
 
-        <div className="flex shrink-0 items-center gap-4">
-          <span className="hidden h-14 max-w-56 items-center truncate text-xs text-muted-foreground xl:inline-flex">
-            {adminSession.user.email}
-          </span>
+        <div className="flex shrink-0 items-center gap-2">
           <Link
             href="/"
             className="admin-header-link inline-flex h-14 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -33,14 +39,41 @@ async function AdminNav() {
           >
             查看博客
           </Link>
-          <form action="/api/auth/signout" method="post">
-            <button
-              type="submit"
-              className="admin-header-link inline-flex h-14 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              退出
-            </button>
-          </form>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="打开账号菜单"
+              >
+                <UserCircle className="size-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel className="space-y-1">
+                <span className="block text-xs font-normal text-muted-foreground">当前账号</span>
+                <span className="block truncate text-sm font-medium text-foreground">
+                  {adminSession.user.email || '未知邮箱'}
+                </span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem asChild>
+                <Link href="/admin/account">
+                  <UserCircle className="size-4" />
+                  账号设置
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <form action="/api/auth/signout" method="post">
+                <DropdownMenuItem asChild variant="destructive">
+                  <button type="submit" className="w-full">
+                    <LogOut className="size-4" />
+                    退出登录
+                  </button>
+                </DropdownMenuItem>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
