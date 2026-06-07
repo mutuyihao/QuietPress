@@ -184,9 +184,8 @@ Vercel 一键部署：
 
 可持续更新部署：
 
-- 推荐 fork canonical 仓库后在 Vercel 导入 fork。
-- 复制仓库或 fork 可以使用 `.github/workflows/sync-upstream.yml` 从 canonical 仓库 fast-forward 同步 `main`。
-- 同步 workflow 不做强推；如果部署者自己的提交导致无法 fast-forward，需要人工合并。
+- 一键部署产生的仓库不会自动跟随 canonical 仓库更新。
+- 后续更新需要部署者手动合并新版代码，或重新部署新版模板并迁移内容。
 
 GitHub Actions：
 

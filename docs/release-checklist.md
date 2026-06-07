@@ -19,7 +19,7 @@
 
 - [ ] 仓库名和描述使用 `QuietPress`。
 - [ ] README Deploy Button 使用正确的 canonical `repository-url`。
-- [ ] README 明确 Deploy Button 是快照式复制；可持续更新路径应引导用户 fork/import，并启用 `sync-upstream` workflow。
+- [ ] README 明确 Deploy Button 是快照式复制，不会自动跟随 canonical 仓库更新。
 - [ ] 默认分支为 `main`。
 - [ ] 启用 branch protection，要求 CI 通过后合并。
 - [ ] 启用 Dependabot 或至少定期检查依赖更新。

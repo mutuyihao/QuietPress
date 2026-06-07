@@ -125,15 +125,7 @@ CRON_SECRET=your-cron-secret
 
 Vercel Deploy Button 会把 QuietPress 的 canonical 仓库克隆/复制到部署者自己的 GitHub/GitLab/Bitbucket 账号，然后 Vercel Project 连接的是这个新仓库。它不是 upstream 跟踪关系，所以 canonical 仓库更新时，复制出来的仓库不会自动收到 commit，也不会自动触发 Vercel rebuild。
 
-需要持续接收 QuietPress 更新时，推荐流程是：
-
-1. Fork `mutuyihao/blog` 到自己的 GitHub 账号。
-2. 在 Vercel 中导入这个 fork，而不是再次点击 Deploy Button 创建新副本。
-3. 在 fork 的 GitHub Actions 设置里确认 workflow 有 `Read and write permissions`。
-4. 启用 `.github/workflows/sync-upstream.yml`，可手动运行，也可保留默认每周定时运行。
-5. 该 workflow 只会执行 `git merge --ff-only upstream/main` 并 push 到自己的 `main`；同步成功后，Vercel 会因为连接仓库产生新 push 而自动重建。
-
-如果复制仓库中已经有自己的提交，无法 fast-forward 时 workflow 会失败并停止。此时需要手动 rebase/merge 上游更新，或者把自己的内容迁移到新版本后再部署；workflow 不会强推覆盖本地改动。
+需要接收 QuietPress 后续更新时，需要在部署者自己的仓库中手动合并新版代码，或重新部署新版模板并迁移内容。项目不再内置自动同步机制，避免一键部署用户误以为源仓库更新会自动合并到自己的仓库。
 
 ## Docker
 

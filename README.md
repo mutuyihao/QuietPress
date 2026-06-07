@@ -96,7 +96,7 @@ Deploy Button 的 `repository-url` 必须写死 canonical 仓库地址，Vercel 
 
 Deploy Button 是快照式一键部署：Vercel 会把 canonical 仓库克隆/复制到部署者自己的 Git 账号，再把 Vercel Project 连接到这个新仓库。这个新仓库不会天然跟随 `mutuyihao/blog` 的后续更新；只有部署者仓库本身产生新 commit 时，Vercel 才会自动重新构建。
 
-如果希望部署后继续获取源仓库更新，推荐使用“可持续更新部署”路径：先 fork `mutuyihao/blog`，再在 Vercel 里导入自己的 fork。复制仓库或 fork 里可以启用 `.github/workflows/sync-upstream.yml`：它会定期或手动从 canonical 仓库 fast-forward 同步 `main`，同步成功后 push 到自己的仓库，Vercel 会因该 push 自动重建。该 workflow 只做 `--ff-only`，不会强行覆盖部署者自己的改动。
+如果希望部署后继续获取源仓库更新，需要在自己的仓库里手动合并或重新部署新版模板。QuietPress 不再提供自动同步机制，避免给一键部署用户造成“会自动更新”的误解。
 
 QuietPress 当前有意保持单管理员模式，不包含多作者、多管理员、角色权限、邀请机制、邮件订阅发送、修订历史 diff/restore。
 
