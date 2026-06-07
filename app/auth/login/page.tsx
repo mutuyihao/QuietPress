@@ -5,12 +5,18 @@ import { LoginRedirectCountdown } from '@/components/login-redirect-countdown'
 import { getAdminSession } from '@/lib/admin-auth'
 
 interface LoginPageProps {
-  searchParams?: Promise<{ error?: string; login?: string }>
+  searchParams?: Promise<{ error?: string; login?: string; next?: string }>
+}
+
+function safeNextPath(value: string | undefined): string {
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return ''
+  return value
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams
   const error = params?.error
+  const next = safeNextPath(params?.next)
   const showLoginSuccess = params?.login === 'success' && await getAdminSession()
 
   return (
@@ -24,6 +30,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <LoginRedirectCountdown seconds={3} />
         ) : (
           <form action="/api/auth/login" method="post" className="space-y-4">
+            {next && <input type="hidden" name="next" value={next} />}
             <div className="space-y-2">
               <Label htmlFor="email">邮箱</Label>
               <Input

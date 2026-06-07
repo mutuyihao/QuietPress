@@ -14,6 +14,17 @@ function loginSuccessRedirect(request: NextRequest) {
   return NextResponse.redirect(url, { status: 303 })
 }
 
+function safeRedirectPath(value: FormDataEntryValue | null): string | null {
+  const text = typeof value === 'string' ? value : ''
+  if (!text || !text.startsWith('/') || text.startsWith('//')) return null
+  return text
+}
+
+function nextRedirect(request: NextRequest, path: string | null) {
+  if (!path) return loginSuccessRedirect(request)
+  return NextResponse.redirect(new URL(path, request.url), { status: 303 })
+}
+
 function getAuthErrorMessage(message: string) {
   const normalizedMessage = message.toLowerCase()
 
@@ -45,6 +56,7 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const email = String(formData.get('email') || '').trim()
   const password = String(formData.get('password') || '')
+  const next = safeRedirectPath(formData.get('next'))
 
   if (!email && !password) {
     return loginRedirect(request, '请输入邮箱和密码。')
@@ -121,5 +133,5 @@ export async function POST(request: NextRequest) {
     return loginRedirect(request, '您没有管理员权限。')
   }
 
-  return loginSuccessRedirect(request)
+  return nextRedirect(request, next)
 }

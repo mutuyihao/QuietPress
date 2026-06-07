@@ -48,6 +48,7 @@ export interface SiteSettings {
   image_max_height: number
   social_links: Record<string, string>
   about_content: string
+  mcp_enabled: boolean
   updated_at: string
 }
 

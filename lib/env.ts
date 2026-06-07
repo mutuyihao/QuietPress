@@ -15,6 +15,14 @@ export function getSupabaseAnonKey(): string {
   return value
 }
 
+export function getSupabaseServiceRoleKey(): string {
+  const value = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!value) {
+    throw new Error('Missing required environment variable: SUPABASE_SERVICE_ROLE_KEY')
+  }
+  return value
+}
+
 export function getDefaultSiteUrl(): string {
   return normalizeSiteUrl(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000')
 }
