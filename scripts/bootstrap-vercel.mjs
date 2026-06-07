@@ -1,4 +1,5 @@
 import { readdir, readFile } from 'node:fs/promises'
+import { createHash } from 'node:crypto'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -11,6 +12,9 @@ const migrationsDir = path.join(
   'supabase',
   'migrations',
 )
+const MIGRATION_LOCK_ID = 2026060706
+const MIGRATION_STATEMENT_TIMEOUT = '120s'
+const MIGRATION_LOCK_TIMEOUT = '15s'
 
 function env(key) {
   const value = process.env[key]
@@ -50,6 +54,14 @@ function isExistingUserError(error) {
     || message.includes('already exists')
     || message.includes('user already')
   )
+}
+
+function checksum(value) {
+  return createHash('sha256').update(value).digest('hex')
+}
+
+function formatDuration(startedAt) {
+  return `${Date.now() - startedAt}ms`
 }
 
 async function findUserByEmail(supabase, email) {
@@ -96,15 +108,56 @@ async function runMigration(databaseUrl) {
     prepare: false,
     idle_timeout: 5,
     connect_timeout: 20,
+    onnotice: () => {},
   })
 
   try {
+    await sql`select set_config('lock_timeout', ${MIGRATION_LOCK_TIMEOUT}, false)`
+    await sql`select set_config('statement_timeout', ${MIGRATION_STATEMENT_TIMEOUT}, false)`
+
+    const [{ locked }] = await sql`select pg_try_advisory_lock(${MIGRATION_LOCK_ID}) as locked`
+    if (!locked) {
+      throw new Error('Another QuietPress bootstrap migration is already running. Retry after that deployment finishes.')
+    }
+
+    await sql`
+      create table if not exists public.quietpress_migrations (
+        name text primary key,
+        checksum text not null,
+        applied_at timestamptz not null default now()
+      )
+    `
+
     for (const fileName of migrationFiles) {
       const migrationPath = path.join(migrationsDir, fileName)
       const migrationSql = await readFile(migrationPath, 'utf8')
+      const migrationChecksum = checksum(migrationSql)
+      const existing = await sql`
+        select checksum
+        from public.quietpress_migrations
+        where name = ${fileName}
+      `
+
+      if (existing[0]?.checksum === migrationChecksum) {
+        console.log(`[bootstrap] Skipping migration ${fileName}; already applied.`)
+        continue
+      }
+
+      if (existing[0]) {
+        throw new Error(`Migration ${fileName} was already applied with a different checksum.`)
+      }
+
+      const startedAt = Date.now()
       console.log(`[bootstrap] Applying migration ${fileName}.`)
       await sql.unsafe(migrationSql)
+      await sql`
+        insert into public.quietpress_migrations (name, checksum)
+        values (${fileName}, ${migrationChecksum})
+      `
+      console.log(`[bootstrap] Applied migration ${fileName} in ${formatDuration(startedAt)}.`)
     }
+
+    await sql`select pg_advisory_unlock(${MIGRATION_LOCK_ID})`
   } finally {
     await sql.end({ timeout: 5 })
   }

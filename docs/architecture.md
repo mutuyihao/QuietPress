@@ -91,6 +91,7 @@ docs/                 项目文档
 - `comments`: 评论。
 - `newsletter_subscribers`: 邮件订阅者预留表。
 - `media_objects`: 媒体库对象记录。
+- `quietpress_migrations`: Vercel bootstrap 已执行 migration 记录。
 - `mcp_oauth_clients`: MCP OAuth client，包括手工登记和 DCR 自注册 client。
 - `mcp_oauth_authorization_codes`: PKCE 授权码，只保存 hash。
 - `mcp_oauth_tokens`: access/refresh token hash、resource、scope、过期和撤销状态。
@@ -178,7 +179,7 @@ Vercel 一键部署：
 - Deploy Button 会复制 canonical 仓库到部署者自己的 Git 账号；该副本不是 upstream 跟踪仓库。
 - 通过 Vercel Marketplace 创建或连接 Supabase。
 - 在 `next build` 前运行 `pnpm bootstrap:vercel`。
-- 按文件名顺序自动执行 `supabase/migrations/*.sql`。
+- 按文件名顺序自动执行 `supabase/migrations/*.sql`，并通过 `public.quietpress_migrations` 跳过已执行且 checksum 一致的 migration。
 - 使用 `ADMIN_EMAIL` 创建第一个管理员。
 - 初始临时密码为 `QuietPress@2026!`，必须在 `/admin/account` 修改。
 

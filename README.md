@@ -4,7 +4,7 @@
 
 QuietPress 是一个基于 Next.js App Router 和 Supabase 的个人博客 CMS 模板，支持 Vercel 一键部署。它包含公开博客、后台管理、Markdown 写作、图片上传、评论审核、阅读统计、RSS、Sitemap、站点设置和多存储后端。
 
-Vercel Deploy Button 会通过 Vercel Marketplace 创建或连接 Supabase，并在构建阶段按文件名顺序自动执行 `supabase/migrations/*.sql`、创建第一个管理员账号。部署时只需要填写 `ADMIN_EMAIL`。初始临时密码为 `QuietPress@2026!`，首次登录后请到 `/admin/account` 修改。
+Vercel Deploy Button 会通过 Vercel Marketplace 创建或连接 Supabase，并在构建阶段按文件名顺序自动执行 `supabase/migrations/*.sql`、记录已执行 migration、创建第一个管理员账号。部署时只需要填写 `ADMIN_EMAIL`。初始临时密码为 `QuietPress@2026!`，首次登录后请到 `/admin/account` 修改。
 
 English summary: QuietPress is a one-click deployable personal blog CMS built with Next.js and Supabase.
 

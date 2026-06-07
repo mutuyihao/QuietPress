@@ -102,7 +102,7 @@ CRON_SECRET=your-cron-secret
 2. 让 Vercel 创建或连接 Supabase Marketplace resource。
 3. 在 Vercel 表单里只填写 `ADMIN_EMAIL`。
 4. Vercel build 会在 `next build` 前运行 `pnpm bootstrap:vercel`。
-5. bootstrap 会按文件名顺序自动执行 `supabase/migrations/*.sql`。
+5. bootstrap 会按文件名顺序自动执行 `supabase/migrations/*.sql`，并在 `public.quietpress_migrations` 中记录已执行文件，后续构建会跳过相同 checksum 的 migration。
 6. bootstrap 会用 `ADMIN_EMAIL` 创建第一个管理员账号。
 7. 访问 `/auth/login`，使用 `ADMIN_EMAIL` 和临时密码 `QuietPress@2026!` 登录。
 8. 登录后到 `/admin/account` 修改临时密码。
