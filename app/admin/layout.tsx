@@ -13,12 +13,22 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Toaster } from '@/components/ui/sonner'
 import { getAdminSession } from '@/lib/admin-auth'
+import packageJson from '@/package.json'
+
+function getRuntimeVersion() {
+  const version = process.env.APP_VERSION || process.env.NEXT_PUBLIC_APP_VERSION || packageJson.version
+  const commitSha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
+  const shortCommitSha = commitSha?.slice(0, 7)
+
+  return shortCommitSha ? `v${version} (${shortCommitSha})` : `v${version}`
+}
 
 async function AdminNav() {
   const adminSession = await getAdminSession()
   if (!adminSession) {
     redirect('/auth/login')
   }
+  const runtimeVersion = getRuntimeVersion()
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
@@ -32,6 +42,12 @@ async function AdminNav() {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
+          <span
+            className="hidden rounded-md border border-border/70 px-2 py-1 font-mono text-xs text-muted-foreground md:inline-flex"
+            title={`运行版本 ${runtimeVersion}`}
+          >
+            {runtimeVersion}
+          </span>
           <Link
             href="/"
             className="admin-header-link inline-flex h-14 items-center text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
@@ -56,6 +72,11 @@ async function AdminNav() {
                   {adminSession.user.email || '未知邮箱'}
                 </span>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="flex items-center justify-between gap-4 px-2 py-1.5 text-xs text-muted-foreground">
+                <span>运行版本</span>
+                <span className="font-mono">{runtimeVersion}</span>
+              </div>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
                 <Link href="/admin/account">
