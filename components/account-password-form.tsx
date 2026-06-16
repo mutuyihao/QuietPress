@@ -1,47 +1,50 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/lazy-toast";
 
-import { updateAdminPassword } from '@/lib/actions'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { updateAdminPassword } from "@/lib/actions";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function AccountPasswordForm() {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
+    event.preventDefault();
 
-    const formData = new FormData()
-    formData.append('current_password', currentPassword)
-    formData.append('new_password', newPassword)
-    formData.append('confirm_password', confirmPassword)
+    const formData = new FormData();
+    formData.append("current_password", currentPassword);
+    formData.append("new_password", newPassword);
+    formData.append("confirm_password", confirmPassword);
 
     startTransition(async () => {
-      const result = await updateAdminPassword(formData)
+      const result = await updateAdminPassword(formData);
 
       if (!result.success) {
-        toast.error(result.error || '密码更新失败')
-        return
+        toast.error(result.error || "密码更新失败");
+        return;
       }
 
-      setCurrentPassword('')
-      setNewPassword('')
-      setConfirmPassword('')
-      toast.success('密码已更新')
-      router.refresh()
-    })
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      toast.success("密码已更新");
+      router.refresh();
+    });
   }
 
   return (
-    <form onSubmit={handleSubmit} className="admin-panel max-w-xl space-y-5 p-5">
+    <form
+      onSubmit={handleSubmit}
+      className="admin-panel max-w-xl space-y-5 p-5"
+    >
       <div className="space-y-1">
         <h2 className="admin-section-title">修改密码</h2>
         <p className="text-sm text-muted-foreground">
@@ -88,8 +91,8 @@ export function AccountPasswordForm() {
       </div>
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? '更新中...' : '更新密码'}
+        {isPending ? "更新中..." : "更新密码"}
       </Button>
     </form>
-  )
+  );
 }

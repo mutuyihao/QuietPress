@@ -1,8 +1,8 @@
-import { getAllTagsAdmin } from '@/lib/admin-queries'
-import { TagManager } from '@/components/tag-manager'
+import { getAllTagsAdmin } from "@/lib/admin-queries";
+import { TagManager } from "@/components/tag-manager";
 
 export default async function AdminTagsPage() {
-  const tags = await getAllTagsAdmin()
+  const tags = await getAllTagsAdmin();
 
   return (
     <div className="admin-page">
@@ -11,5 +11,5 @@ export default async function AdminTagsPage() {
       </div>
       <TagManager tags={tags} />
     </div>
-  )
+  );
 }

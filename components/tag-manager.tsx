@@ -1,78 +1,82 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { createTag, deleteTag, updateTag } from '@/lib/actions'
-import type { Tag } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/lazy-toast";
+import { createTag, deleteTag, updateTag } from "@/lib/actions";
+import type { Tag } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface TagManagerProps {
-  tags: Tag[]
+  tags: Tag[];
 }
 
 export function TagManager({ tags }: TagManagerProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [newTagName, setNewTagName] = useState('')
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editingName, setEditingName] = useState('')
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [newTagName, setNewTagName] = useState("");
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState("");
 
   const startEditing = (tag: Tag) => {
-    setEditingId(tag.id)
-    setEditingName(tag.name)
-    setDeleteConfirm(null)
-  }
+    setEditingId(tag.id);
+    setEditingName(tag.name);
+    setDeleteConfirm(null);
+  };
 
   const handleUpdate = async (tagId: string) => {
-    if (!editingName.trim()) return
+    if (!editingName.trim()) return;
     startTransition(async () => {
       try {
-        const result = await updateTag(tagId, editingName.trim())
+        const result = await updateTag(tagId, editingName.trim());
         if (!result.success) {
-          toast.error(result.error || '更新失败')
-          return
+          toast.error(result.error || "更新失败");
+          return;
         }
-        setEditingId(null)
-        router.refresh()
+        setEditingId(null);
+        router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : '更新失败')
+        toast.error(err instanceof Error ? err.message : "更新失败");
       }
-    })
-  }
+    });
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newTagName.trim()) return
+    e.preventDefault();
+    if (!newTagName.trim()) return;
 
     startTransition(async () => {
       try {
-        const result = await createTag(newTagName.trim())
+        const result = await createTag(newTagName.trim());
         if (!result.success) {
-          toast.error(result.error || '创建失败')
-          return
+          toast.error(result.error || "创建失败");
+          return;
         }
-        setNewTagName('')
-        router.refresh()
+        setNewTagName("");
+        router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : '创建失败')
+        toast.error(err instanceof Error ? err.message : "创建失败");
       }
-    })
-  }
+    });
+  };
 
   const handleDelete = (tagId: string) => {
     startTransition(async () => {
       try {
-        await deleteTag(tagId)
-        setDeleteConfirm(null)
-        router.refresh()
+        const result = await deleteTag(tagId);
+        if (!result.success) {
+          toast.error(result.error || "删除失败");
+          return;
+        }
+        setDeleteConfirm(null);
+        router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : '删除失败')
+        toast.error(err instanceof Error ? err.message : "删除失败");
       }
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -84,7 +88,7 @@ export function TagManager({ tags }: TagManagerProps) {
           className="max-w-xs"
         />
         <Button type="submit" disabled={isPending || !newTagName.trim()}>
-          {isPending ? '创建中...' : '创建标签'}
+          {isPending ? "创建中..." : "创建标签"}
         </Button>
       </form>
 
@@ -97,14 +101,23 @@ export function TagManager({ tags }: TagManagerProps) {
           <table className="w-full">
             <thead className="bg-muted/25">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">名称</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Slug</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">操作</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                  名称
+                </th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">
+                  Slug
+                </th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">
+                  操作
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {tags.map((tag) => (
-                <tr key={tag.id} className="hover:bg-muted/25 transition-colors">
+                <tr
+                  key={tag.id}
+                  className="hover:bg-muted/25 transition-colors"
+                >
                   <td className="px-4 py-3 font-medium text-foreground">
                     {editingId === tag.id ? (
                       <Input
@@ -119,7 +132,9 @@ export function TagManager({ tags }: TagManagerProps) {
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
                     {editingId === tag.id ? (
-                      <span className="text-xs text-muted-foreground/60 italic">保存后重新生成</span>
+                      <span className="text-xs text-muted-foreground/60 italic">
+                        保存后重新生成
+                      </span>
                     ) : (
                       tag.slug
                     )}
@@ -130,7 +145,11 @@ export function TagManager({ tags }: TagManagerProps) {
                         <Button
                           size="sm"
                           onClick={() => handleUpdate(tag.id)}
-                          disabled={isPending || !editingName.trim() || editingName.trim() === tag.name}
+                          disabled={
+                            isPending ||
+                            !editingName.trim() ||
+                            editingName.trim() === tag.name
+                          }
                         >
                           保存
                         </Button>
@@ -145,7 +164,9 @@ export function TagManager({ tags }: TagManagerProps) {
                       </div>
                     ) : deleteConfirm === tag.id ? (
                       <div className="flex items-center justify-end gap-2">
-                        <span className="text-sm text-muted-foreground">确定?</span>
+                        <span className="text-sm text-muted-foreground">
+                          确定?
+                        </span>
                         <Button
                           size="sm"
                           variant="destructive"
@@ -192,5 +213,5 @@ export function TagManager({ tags }: TagManagerProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

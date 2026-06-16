@@ -1,13 +1,13 @@
-import Link from 'next/link'
-import { ArrowRight, MoveRight } from 'lucide-react'
+import Link from "next/link";
+import { ArrowRight, MoveRight } from "lucide-react";
 
-import { getSiteSettingsAdmin } from '@/lib/admin-queries'
-import { SettingsForm } from '@/components/settings-form'
-import { Card, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { getSiteSettingsAdmin } from "@/lib/admin-queries";
+import { SettingsForm } from "@/components/settings-form";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 export default async function AdminSettingsPage() {
-  const settings = await getSiteSettingsAdmin()
+  const settings = await getSiteSettingsAdmin();
 
   return (
     <div className="admin-page">
@@ -35,5 +35,5 @@ export default async function AdminSettingsPage() {
       </Card>
       <SettingsForm settings={settings} />
     </div>
-  )
+  );
 }

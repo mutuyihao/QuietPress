@@ -1,23 +1,27 @@
-import Link from 'next/link'
-import { Eye, Edit3, FileText, Plus, Tag, TrendingUp } from 'lucide-react'
-import { AdminPostList } from '@/components/admin-post-list'
-import { ViewsChart } from '@/components/admin-views-chart'
-import { TrendChart } from '@/components/admin-trend-chart'
-import { Button } from '@/components/ui/button'
-import { getAllPostsAdmin } from '@/lib/admin-queries'
+import Link from "next/link";
+import { Eye, Edit3, FileText, Plus, Tag, TrendingUp } from "lucide-react";
+import { AdminPostList } from "@/components/admin-post-list";
+import { ViewsChart } from "@/components/admin-views-chart";
+import { TrendChart } from "@/components/admin-trend-chart";
+import { Button } from "@/components/ui/button";
+import { getAdminPostSummary, getAllPostsAdmin } from "@/lib/admin-queries";
+import { Pagination } from "@/components/pagination";
 
-export default async function AdminDashboard() {
-  const posts = await getAllPostsAdmin()
+export default async function AdminDashboard({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string }>;
+}) {
+  const params = await searchParams;
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
+  const [postResult, summary] = await Promise.all([
+    getAllPostsAdmin(page, 50),
+    getAdminPostSummary(),
+  ]);
 
-  const totalPosts = posts.length
-  const totalViews = posts.reduce((sum, post) => sum + (post.views_count || 0), 0)
-  const draftsCount = posts.filter((post) => post.status === 'draft').length
-  const totalTags = new Set(posts.flatMap((post) => post.tags.map((tag) => tag.id))).size
-
-  const topPosts = [...posts]
-    .sort((a, b) => (b.views_count || 0) - (a.views_count || 0))
-    .slice(0, 3)
-  const maxViews = topPosts[0]?.views_count || 1
+  const posts = postResult.items;
+  const { totalPosts, totalViews, draftsCount, totalTags, topPosts } = summary;
+  const maxViews = topPosts[0]?.views_count || 1;
 
   return (
     <div className="admin-page font-sans">
@@ -41,7 +45,9 @@ export default async function AdminDashboard() {
             <FileText className="h-4 w-4 opacity-70" />
           </div>
           <div className="mt-4">
-            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">{totalPosts}</h3>
+            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {totalPosts}
+            </h3>
           </div>
         </div>
 
@@ -51,7 +57,9 @@ export default async function AdminDashboard() {
             <Eye className="h-4 w-4 opacity-70" />
           </div>
           <div className="mt-4">
-            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">{totalViews}</h3>
+            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {totalViews}
+            </h3>
           </div>
         </div>
 
@@ -61,7 +69,9 @@ export default async function AdminDashboard() {
             <Edit3 className="h-4 w-4 opacity-70" />
           </div>
           <div className="mt-4">
-            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">{draftsCount}</h3>
+            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {draftsCount}
+            </h3>
           </div>
         </div>
 
@@ -71,7 +81,9 @@ export default async function AdminDashboard() {
             <Tag className="h-4 w-4 opacity-70" />
           </div>
           <div className="mt-4">
-            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">{totalTags}</h3>
+            <h3 className="font-mono text-2xl font-semibold tracking-tight text-foreground">
+              {totalTags}
+            </h3>
           </div>
         </div>
       </div>
@@ -80,6 +92,13 @@ export default async function AdminDashboard() {
         <div className="space-y-4 lg:col-span-2">
           <h2 className="admin-section-title">文章管理</h2>
           <AdminPostList posts={posts} />
+          {postResult.totalPages > 1 && (
+            <Pagination
+              currentPage={postResult.page}
+              totalPages={postResult.totalPages}
+              basePath="/admin"
+            />
+          )}
         </div>
 
         <div className="space-y-6">
@@ -93,10 +112,15 @@ export default async function AdminDashboard() {
             </h2>
             <div className="admin-panel space-y-4 p-5">
               {topPosts.length === 0 ? (
-                <p className="py-6 text-center text-sm text-muted-foreground">暂无统计数据</p>
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  暂无统计数据
+                </p>
               ) : (
                 topPosts.map((post, index) => {
-                  const percentage = Math.max(5, Math.round(((post.views_count || 0) / maxViews) * 100))
+                  const percentage = Math.max(
+                    5,
+                    Math.round(((post.views_count || 0) / maxViews) * 100),
+                  );
 
                   return (
                     <div key={post.id} className="space-y-2">
@@ -105,7 +129,9 @@ export default async function AdminDashboard() {
                           <span className="text-[11px] font-semibold uppercase text-muted-foreground/60">
                             NO. {index + 1}
                           </span>
-                          <h4 className="block truncate text-[13.5px] font-medium text-foreground">{post.title}</h4>
+                          <h4 className="block truncate text-[13.5px] font-medium text-foreground">
+                            {post.title}
+                          </h4>
                         </div>
                         <span className="shrink-0 font-mono text-[13px] font-semibold text-muted-foreground">
                           {post.views_count || 0} 次
@@ -118,7 +144,7 @@ export default async function AdminDashboard() {
                         />
                       </div>
                     </div>
-                  )
+                  );
                 })
               )}
             </div>
@@ -126,5 +152,5 @@ export default async function AdminDashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }

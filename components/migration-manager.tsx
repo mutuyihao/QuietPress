@@ -1,197 +1,238 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import { AlertTriangle, CheckCircle, Download, Loader2, Upload } from 'lucide-react'
-import { toast } from 'sonner'
+import { useState, useTransition } from "react";
+import {
+  AlertTriangle,
+  CheckCircle,
+  Download,
+  Loader2,
+  Upload,
+} from "lucide-react";
+import { toast } from "@/components/ui/lazy-toast";
 import type {
   ImportedMediaResult,
   MigrationPreview,
   MigrationPostAction,
   MigrationTagAction,
   QuietPressExportV1,
-} from '@/lib/migration/types'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+} from "@/lib/migration/types";
+import { readApiJson } from "@/lib/api-client";
+import { DEFAULT_LOCALE } from "@/lib/date-format";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
+} from "@/components/ui/select";
 
-const MAX_CLIENT_IMPORT_BYTES = 10 * 1024 * 1024
+const MAX_CLIENT_IMPORT_BYTES = 10 * 1024 * 1024;
 
 interface ImportResult {
   database: {
-    settings_imported?: boolean
-    tags_created?: number
-    tags_reused?: number
-    tags_updated?: number
-    posts_created?: number
-    posts_overwritten?: number
-    posts_skipped?: number
-    posts_duplicated?: number
-  }
+    settings_imported?: boolean;
+    tags_created?: number;
+    tags_reused?: number;
+    tags_updated?: number;
+    posts_created?: number;
+    posts_overwritten?: number;
+    posts_skipped?: number;
+    posts_duplicated?: number;
+  };
   media: {
-    uploaded: ImportedMediaResult[]
-    failed: ImportedMediaResult[]
-    skipped: ImportedMediaResult[]
-  }
+    uploaded: ImportedMediaResult[];
+    failed: ImportedMediaResult[];
+    skipped: ImportedMediaResult[];
+  };
 }
 
 function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(value))
+  return new Intl.DateTimeFormat(DEFAULT_LOCALE, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function getCandidatePackage(raw: unknown): QuietPressExportV1 {
-  if (raw && typeof raw === 'object' && 'package' in raw) {
-    return (raw as { package: QuietPressExportV1 }).package
+  if (raw && typeof raw === "object" && "package" in raw) {
+    return (raw as { package: QuietPressExportV1 }).package;
   }
 
-  return raw as QuietPressExportV1
+  return raw as QuietPressExportV1;
 }
 
 async function readJsonFile(file: File): Promise<QuietPressExportV1> {
   if (file.size > MAX_CLIENT_IMPORT_BYTES) {
-    throw new Error('导入包不能超过 10MB')
+    throw new Error("导入包不能超过 10MB");
   }
 
-  const text = await file.text()
-  let raw: unknown
+  const text = await file.text();
+  let raw: unknown;
 
   try {
-    raw = JSON.parse(text)
+    raw = JSON.parse(text);
   } catch {
-    throw new Error('导入包必须是有效 JSON 文件')
+    throw new Error("导入包必须是有效 JSON 文件");
   }
 
-  return getCandidatePackage(raw)
+  return getCandidatePackage(raw);
 }
 
-async function fetchPreview(migrationPackage: QuietPressExportV1): Promise<MigrationPreview> {
-  const response = await fetch('/api/admin/migration/preview', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+async function fetchPreview(
+  migrationPackage: QuietPressExportV1,
+): Promise<MigrationPreview> {
+  const response = await fetch("/api/admin/migration/preview", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(migrationPackage),
-  })
-  const data = await response.json()
-
-  if (!response.ok) {
-    throw new Error(data.error || '预检失败')
-  }
-
-  return data as MigrationPreview
+  });
+  return readApiJson<MigrationPreview>(response);
 }
 
 async function runImport(
   migrationPackage: QuietPressExportV1,
   options: {
-    importSettings: boolean
-    importMedia: boolean
-    postActions: Record<string, MigrationPostAction>
-    tagActions: Record<string, MigrationTagAction>
+    importSettings: boolean;
+    importMedia: boolean;
+    postActions: Record<string, MigrationPostAction>;
+    tagActions: Record<string, MigrationTagAction>;
   },
 ): Promise<ImportResult> {
-  const response = await fetch('/api/admin/migration/import', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+  const response = await fetch("/api/admin/migration/import", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ package: migrationPackage, options }),
-  })
-  const data = await response.json()
-
-  if (!response.ok || !data.success) {
-    throw new Error(data.error || '导入失败')
-  }
-
-  return data.result as ImportResult
+  });
+  const data = await readApiJson<{ result: ImportResult }>(response);
+  return data.result;
 }
 
-function ResultStat({ label, value }: { label: string; value: number | boolean | undefined }) {
+function ResultStat({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | boolean | undefined;
+}) {
   return (
     <div className="rounded-lg border border-border bg-muted/30 px-3 py-2">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-lg font-semibold text-foreground">
-        {typeof value === 'boolean' ? (value ? '是' : '否') : value ?? 0}
+        {typeof value === "boolean" ? (value ? "是" : "否") : (value ?? 0)}
       </p>
     </div>
-  )
+  );
 }
 
-function MediaResultList({ title, items }: { title: string; items: ImportedMediaResult[] }) {
-  if (items.length === 0) return null
+function MediaResultList({
+  title,
+  items,
+}: {
+  title: string;
+  items: ImportedMediaResult[];
+}) {
+  if (items.length === 0) return null;
 
   return (
     <div className="space-y-2">
       <h3 className="text-sm font-medium text-foreground">{title}</h3>
       <div className="max-h-52 overflow-auto rounded-lg border border-border">
         {items.map((item) => (
-          <div key={`${item.originalUrl}-${item.importedUrl || item.error || item.path}`} className="border-b border-border px-3 py-2 text-xs last:border-b-0">
+          <div
+            key={`${item.originalUrl}-${item.importedUrl || item.error || item.path}`}
+            className="border-b border-border px-3 py-2 text-xs last:border-b-0"
+          >
             <p className="break-all text-foreground">{item.originalUrl}</p>
-            {item.importedUrl && <p className="mt-1 break-all text-muted-foreground">→ {item.importedUrl}</p>}
-            {item.error && <p className="mt-1 text-destructive">{item.error}</p>}
+            {item.importedUrl && (
+              <p className="mt-1 break-all text-muted-foreground">
+                → {item.importedUrl}
+              </p>
+            )}
+            {item.error && (
+              <p className="mt-1 text-destructive">{item.error}</p>
+            )}
           </div>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 export function MigrationManager() {
-  const [selectedFileName, setSelectedFileName] = useState<string | null>(null)
-  const [migrationPackage, setMigrationPackage] = useState<QuietPressExportV1 | null>(null)
-  const [preview, setPreview] = useState<MigrationPreview | null>(null)
-  const [postActions, setPostActions] = useState<Record<string, MigrationPostAction>>({})
-  const [tagActions, setTagActions] = useState<Record<string, MigrationTagAction>>({})
-  const [importSettings, setImportSettings] = useState(true)
-  const [importMedia, setImportMedia] = useState(true)
-  const [result, setResult] = useState<ImportResult | null>(null)
-  const [isPreviewPending, startPreviewTransition] = useTransition()
-  const [isImportPending, startImportTransition] = useTransition()
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [migrationPackage, setMigrationPackage] =
+    useState<QuietPressExportV1 | null>(null);
+  const [preview, setPreview] = useState<MigrationPreview | null>(null);
+  const [postActions, setPostActions] = useState<
+    Record<string, MigrationPostAction>
+  >({});
+  const [tagActions, setTagActions] = useState<
+    Record<string, MigrationTagAction>
+  >({});
+  const [importSettings, setImportSettings] = useState(true);
+  const [importMedia, setImportMedia] = useState(true);
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const [isPreviewPending, startPreviewTransition] = useTransition();
+  const [isImportPending, startImportTransition] = useTransition();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    setSelectedFileName(file.name)
-    setMigrationPackage(null)
-    setPreview(null)
-    setResult(null)
-    setPostActions({})
-    setTagActions({})
+    setSelectedFileName(file.name);
+    setMigrationPackage(null);
+    setPreview(null);
+    setResult(null);
+    setPostActions({});
+    setTagActions({});
 
     startPreviewTransition(async () => {
       try {
-        const nextPackage = await readJsonFile(file)
-        const nextPreview = await fetchPreview(nextPackage)
+        const nextPackage = await readJsonFile(file);
+        const nextPreview = await fetchPreview(nextPackage);
 
-        setMigrationPackage(nextPackage)
-        setPreview(nextPreview)
-        setImportSettings(nextPreview.summary.settings)
-        setImportMedia(nextPreview.summary.media > 0)
-        setPostActions(Object.fromEntries(
-          nextPreview.conflicts.posts.map((conflict) => [conflict.slug, 'skip' as MigrationPostAction]),
-        ))
-        setTagActions(Object.fromEntries(
-          nextPreview.conflicts.tags.map((conflict) => [conflict.slug, 'reuse' as MigrationTagAction]),
-        ))
+        setMigrationPackage(nextPackage);
+        setPreview(nextPreview);
+        setImportSettings(nextPreview.summary.settings);
+        setImportMedia(nextPreview.summary.media > 0);
+        setPostActions(
+          Object.fromEntries(
+            nextPreview.conflicts.posts.map((conflict) => [
+              conflict.slug,
+              "skip" as MigrationPostAction,
+            ]),
+          ),
+        );
+        setTagActions(
+          Object.fromEntries(
+            nextPreview.conflicts.tags.map((conflict) => [
+              conflict.slug,
+              "reuse" as MigrationTagAction,
+            ]),
+          ),
+        );
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '导入包预检失败')
+        toast.error(error instanceof Error ? error.message : "导入包预检失败");
       }
-    })
-  }
+    });
+  };
 
   const handleImport = () => {
-    if (!migrationPackage || !preview) return
+    if (!migrationPackage || !preview) return;
 
     startImportTransition(async () => {
       try {
@@ -200,22 +241,22 @@ export function MigrationManager() {
           importMedia,
           postActions,
           tagActions,
-        })
-        setResult(nextResult)
-        toast.success('导入完成')
+        });
+        setResult(nextResult);
+        toast.success("导入完成");
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : '导入失败')
+        toast.error(error instanceof Error ? error.message : "导入失败");
       }
-    })
-  }
+    });
+  };
 
   const updatePostAction = (slug: string, action: MigrationPostAction) => {
-    setPostActions((current) => ({ ...current, [slug]: action }))
-  }
+    setPostActions((current) => ({ ...current, [slug]: action }));
+  };
 
   const updateTagAction = (slug: string, action: MigrationTagAction) => {
-    setTagActions((current) => ({ ...current, [slug]: action }))
-  }
+    setTagActions((current) => ({ ...current, [slug]: action }));
+  };
 
   return (
     <div className="space-y-6">
@@ -261,7 +302,9 @@ export function MigrationManager() {
               />
             </div>
             <p className="text-xs text-muted-foreground">
-              {selectedFileName ? `已选择：${selectedFileName}` : '最大 10MB；仅支持 QuietPress 自有导出包。'}
+              {selectedFileName
+                ? `已选择：${selectedFileName}`
+                : "最大 10MB；仅支持 QuietPress 自有导出包。"}
             </p>
             {isPreviewPending && (
               <p className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -279,7 +322,9 @@ export function MigrationManager() {
             <CardTitle>预检结果</CardTitle>
             <CardDescription>
               导出时间 {formatDate(preview.meta.exported_at)}
-              {preview.meta.source_url ? ` · 来源 ${preview.meta.source_url}` : ''}
+              {preview.meta.source_url
+                ? ` · 来源 ${preview.meta.source_url}`
+                : ""}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -288,7 +333,10 @@ export function MigrationManager() {
               <ResultStat label="标签" value={preview.summary.tags} />
               <ResultStat label="媒体引用" value={preview.summary.media} />
               <ResultStat label="站点设置" value={preview.summary.settings} />
-              <ResultStat label="无效媒体 URL" value={preview.summary.invalidMediaUrls} />
+              <ResultStat
+                label="无效媒体 URL"
+                value={preview.summary.invalidMediaUrls}
+              />
             </div>
 
             {preview.warnings.length > 0 && (
@@ -308,11 +356,15 @@ export function MigrationManager() {
               <label className="flex items-start gap-3 rounded-lg border border-border p-4">
                 <Checkbox
                   checked={importSettings}
-                  onCheckedChange={(checked) => setImportSettings(Boolean(checked))}
+                  onCheckedChange={(checked) =>
+                    setImportSettings(Boolean(checked))
+                  }
                   disabled={!preview.summary.settings || isImportPending}
                 />
                 <span>
-                  <span className="block text-sm font-medium text-foreground">导入站点内容设置</span>
+                  <span className="block text-sm font-medium text-foreground">
+                    导入站点内容设置
+                  </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
                     会导入站点名称、描述、关于页、社交链接、评论和图片上传配置；目标站点的存储后端环境变量不会被改动。
                   </span>
@@ -322,13 +374,18 @@ export function MigrationManager() {
               <label className="flex items-start gap-3 rounded-lg border border-border p-4">
                 <Checkbox
                   checked={importMedia}
-                  onCheckedChange={(checked) => setImportMedia(Boolean(checked))}
+                  onCheckedChange={(checked) =>
+                    setImportMedia(Boolean(checked))
+                  }
                   disabled={preview.summary.media === 0 || isImportPending}
                 />
                 <span>
-                  <span className="block text-sm font-medium text-foreground">重拉并上传媒体</span>
+                  <span className="block text-sm font-medium text-foreground">
+                    重拉并上传媒体
+                  </span>
                   <span className="mt-1 block text-xs text-muted-foreground">
-                    从原公开 URL 拉取图片并上传到当前存储；失败时保留原 URL 并在结果中报告。
+                    从原公开 URL 拉取图片并上传到当前存储；失败时保留原 URL
+                    并在结果中报告。
                   </span>
                 </span>
               </label>
@@ -336,7 +393,9 @@ export function MigrationManager() {
 
             <div className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-foreground">文章冲突</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  文章冲突
+                </h3>
                 {preview.conflicts.posts.length === 0 ? (
                   <p className="rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground">
                     未发现同 slug 文章。
@@ -344,16 +403,27 @@ export function MigrationManager() {
                 ) : (
                   <div className="space-y-2">
                     {preview.conflicts.posts.map((conflict) => (
-                      <div key={conflict.slug} className="rounded-lg border border-border p-3">
+                      <div
+                        key={conflict.slug}
+                        className="rounded-lg border border-border p-3"
+                      >
                         <div className="mb-3 min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">{conflict.slug}</p>
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {conflict.slug}
+                          </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            导入：{conflict.importedTitle} · 现有：{conflict.existingTitle}
+                            导入：{conflict.importedTitle} · 现有：
+                            {conflict.existingTitle}
                           </p>
                         </div>
                         <Select
-                          value={postActions[conflict.slug] || 'skip'}
-                          onValueChange={(value) => updatePostAction(conflict.slug, value as MigrationPostAction)}
+                          value={postActions[conflict.slug] || "skip"}
+                          onValueChange={(value) =>
+                            updatePostAction(
+                              conflict.slug,
+                              value as MigrationPostAction,
+                            )
+                          }
                           disabled={isImportPending}
                         >
                           <SelectTrigger className="w-full">
@@ -361,8 +431,12 @@ export function MigrationManager() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="skip">跳过现有文章</SelectItem>
-                            <SelectItem value="overwrite">覆盖现有文章</SelectItem>
-                            <SelectItem value="duplicate">另存为副本</SelectItem>
+                            <SelectItem value="overwrite">
+                              覆盖现有文章
+                            </SelectItem>
+                            <SelectItem value="duplicate">
+                              另存为副本
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -372,7 +446,9 @@ export function MigrationManager() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-sm font-medium text-foreground">标签冲突</h3>
+                <h3 className="text-sm font-medium text-foreground">
+                  标签冲突
+                </h3>
                 {preview.conflicts.tags.length === 0 ? (
                   <p className="rounded-lg border border-border px-4 py-3 text-sm text-muted-foreground">
                     未发现同 slug 不同名标签。
@@ -380,16 +456,27 @@ export function MigrationManager() {
                 ) : (
                   <div className="space-y-2">
                     {preview.conflicts.tags.map((conflict) => (
-                      <div key={conflict.slug} className="rounded-lg border border-border p-3">
+                      <div
+                        key={conflict.slug}
+                        className="rounded-lg border border-border p-3"
+                      >
                         <div className="mb-3 min-w-0">
-                          <p className="truncate text-sm font-medium text-foreground">{conflict.slug}</p>
+                          <p className="truncate text-sm font-medium text-foreground">
+                            {conflict.slug}
+                          </p>
                           <p className="mt-1 text-xs text-muted-foreground">
-                            导入：{conflict.importedName} · 现有：{conflict.existingName}
+                            导入：{conflict.importedName} · 现有：
+                            {conflict.existingName}
                           </p>
                         </div>
                         <Select
-                          value={tagActions[conflict.slug] || 'reuse'}
-                          onValueChange={(value) => updateTagAction(conflict.slug, value as MigrationTagAction)}
+                          value={tagActions[conflict.slug] || "reuse"}
+                          onValueChange={(value) =>
+                            updateTagAction(
+                              conflict.slug,
+                              value as MigrationTagAction,
+                            )
+                          }
                           disabled={isImportPending}
                         >
                           <SelectTrigger className="w-full">
@@ -397,7 +484,9 @@ export function MigrationManager() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="reuse">复用现有标签</SelectItem>
-                            <SelectItem value="overwrite">覆盖标签名称</SelectItem>
+                            <SelectItem value="overwrite">
+                              覆盖标签名称
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -408,9 +497,15 @@ export function MigrationManager() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="button" onClick={handleImport} disabled={isImportPending || !migrationPackage}>
-                {isImportPending && <Loader2 className="h-4 w-4 animate-spin" />}
-                {isImportPending ? '正在导入...' : '确认并执行导入'}
+              <Button
+                type="button"
+                onClick={handleImport}
+                disabled={isImportPending || !migrationPackage}
+              >
+                {isImportPending && (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                )}
+                {isImportPending ? "正在导入..." : "确认并执行导入"}
               </Button>
             </div>
           </CardContent>
@@ -424,28 +519,63 @@ export function MigrationManager() {
               <CheckCircle className="h-4 w-4 text-green-600" />
               导入结果
             </CardTitle>
-            <CardDescription>内容已写入，缓存已刷新。媒体失败项不会阻断内容导入。</CardDescription>
+            <CardDescription>
+              内容已写入，缓存已刷新。媒体失败项不会阻断内容导入。
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <ResultStat label="设置已导入" value={result.database.settings_imported} />
-              <ResultStat label="新建标签" value={result.database.tags_created} />
-              <ResultStat label="复用标签" value={result.database.tags_reused} />
-              <ResultStat label="更新标签" value={result.database.tags_updated} />
-              <ResultStat label="新建文章" value={result.database.posts_created} />
-              <ResultStat label="覆盖文章" value={result.database.posts_overwritten} />
-              <ResultStat label="跳过文章" value={result.database.posts_skipped} />
-              <ResultStat label="副本文章" value={result.database.posts_duplicated} />
+              <ResultStat
+                label="设置已导入"
+                value={result.database.settings_imported}
+              />
+              <ResultStat
+                label="新建标签"
+                value={result.database.tags_created}
+              />
+              <ResultStat
+                label="复用标签"
+                value={result.database.tags_reused}
+              />
+              <ResultStat
+                label="更新标签"
+                value={result.database.tags_updated}
+              />
+              <ResultStat
+                label="新建文章"
+                value={result.database.posts_created}
+              />
+              <ResultStat
+                label="覆盖文章"
+                value={result.database.posts_overwritten}
+              />
+              <ResultStat
+                label="跳过文章"
+                value={result.database.posts_skipped}
+              />
+              <ResultStat
+                label="副本文章"
+                value={result.database.posts_duplicated}
+              />
             </div>
 
             <div className="grid gap-5 lg:grid-cols-3">
-              <MediaResultList title={`媒体已重拉 (${result.media.uploaded.length})`} items={result.media.uploaded} />
-              <MediaResultList title={`媒体失败 (${result.media.failed.length})`} items={result.media.failed} />
-              <MediaResultList title={`媒体跳过 (${result.media.skipped.length})`} items={result.media.skipped} />
+              <MediaResultList
+                title={`媒体已重拉 (${result.media.uploaded.length})`}
+                items={result.media.uploaded}
+              />
+              <MediaResultList
+                title={`媒体失败 (${result.media.failed.length})`}
+                items={result.media.failed}
+              />
+              <MediaResultList
+                title={`媒体跳过 (${result.media.skipped.length})`}
+                items={result.media.skipped}
+              />
             </div>
           </CardContent>
         </Card>
       )}
     </div>
-  )
+  );
 }

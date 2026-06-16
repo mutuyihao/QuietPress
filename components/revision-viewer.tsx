@@ -1,65 +1,77 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { formatDate } from '@/lib/blog-utils'
-import { Button } from '@/components/ui/button'
-import { ChevronDown, ChevronLeft, Clock, Loader2 } from 'lucide-react'
+import { useEffect, useState } from "react";
+import { formatDate } from "@/lib/blog-utils";
+import { readApiJson } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronLeft, Clock, Loader2 } from "lucide-react";
 
 interface Revision {
-  id: string
-  post_id: string
-  title: string
-  content_markdown: string
-  excerpt: string | null
-  created_at: string
-  created_by: string | null
+  id: string;
+  post_id: string;
+  title: string;
+  content_markdown: string;
+  excerpt: string | null;
+  created_at: string;
+  created_by: string | null;
 }
 
 interface RevisionViewerProps {
-  postId: string
-  currentContent: string
-  currentTitle: string
-  currentExcerpt: string | null
+  postId: string;
+  currentContent: string;
+  currentTitle: string;
+  currentExcerpt: string | null;
 }
 
-export function RevisionViewer({ postId, currentContent, currentTitle, currentExcerpt }: RevisionViewerProps) {
-  const [revisions, setRevisions] = useState<Revision[]>([])
-  const [loading, setLoading] = useState(true)
-  const [selected, setSelected] = useState<Revision | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [expanded, setExpanded] = useState(false)
+export function RevisionViewer({
+  postId,
+  currentContent,
+  currentTitle,
+  currentExcerpt,
+}: RevisionViewerProps) {
+  const [revisions, setRevisions] = useState<Revision[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<Revision | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    if (!expanded) return
+    if (!expanded) return;
 
-    let cancelled = false
-    setLoading(true)
-    setError(null)
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setLoading(true);
+        setError(null);
+      }
+    });
     fetch(`/api/admin/revisions?postId=${postId}`)
-      .then((res) => res.json())
+      .then((res) =>
+        readApiJson<{ revisions: Revision[]; message?: string }>(res),
+      )
       .then((data) => {
-        if (cancelled) return
-        if (data.message) setError(data.message)
-        else setRevisions(data.revisions || [])
+        if (cancelled) return;
+        if (data.message) setError(data.message);
+        else setRevisions(data.revisions || []);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message)
+        if (!cancelled) setError(err.message);
       })
       .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
+        if (!cancelled) setLoading(false);
+      });
 
     return () => {
-      cancelled = true
-    }
-  }, [postId, expanded])
+      cancelled = true;
+    };
+  }, [postId, expanded]);
 
   const toggleExpanded = () => {
     if (expanded) {
-      setSelected(null)
+      setSelected(null);
     }
-    setExpanded((value) => !value)
-  }
+    setExpanded((value) => !value);
+  };
 
   return (
     <section className="admin-panel overflow-hidden">
@@ -74,8 +86,10 @@ export function RevisionViewer({ postId, currentContent, currentTitle, currentEx
           修订历史
         </span>
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
-          {expanded ? '收起' : '查看'}
-          <ChevronDown className={`h-3.5 w-3.5 transition-transform ${expanded ? 'rotate-180' : ''}`} />
+          {expanded ? "收起" : "查看"}
+          <ChevronDown
+            className={`h-3.5 w-3.5 transition-transform ${expanded ? "rotate-180" : ""}`}
+          />
         </span>
       </button>
 
@@ -99,11 +113,17 @@ export function RevisionViewer({ postId, currentContent, currentTitle, currentEx
               </div>
               <div className="space-y-3">
                 <div>
-                  <span className="text-[11px] font-medium text-muted-foreground">标题</span>
-                  <p className="mt-1 text-sm font-medium text-foreground">{selected.title}</p>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    标题
+                  </span>
+                  <p className="mt-1 text-sm font-medium text-foreground">
+                    {selected.title}
+                  </p>
                 </div>
                 <div>
-                  <span className="text-[11px] font-medium text-muted-foreground">内容</span>
+                  <span className="text-[11px] font-medium text-muted-foreground">
+                    内容
+                  </span>
                   <pre className="mt-1 max-h-64 overflow-y-auto whitespace-pre-wrap rounded-md border border-border bg-background p-3 font-mono text-xs leading-relaxed text-muted-foreground">
                     {selected.content_markdown}
                   </pre>
@@ -123,19 +143,23 @@ export function RevisionViewer({ postId, currentContent, currentTitle, currentEx
             <div className="overflow-hidden rounded-lg border border-border">
               <button
                 type="button"
-                onClick={() => setSelected({
-                  id: 'current',
-                  post_id: postId,
-                  title: currentTitle,
-                  content_markdown: currentContent,
-                  excerpt: currentExcerpt,
-                  created_at: new Date().toISOString(),
-                  created_by: null,
-                })}
+                onClick={() =>
+                  setSelected({
+                    id: "current",
+                    post_id: postId,
+                    title: currentTitle,
+                    content_markdown: currentContent,
+                    excerpt: currentExcerpt,
+                    created_at: new Date().toISOString(),
+                    created_by: null,
+                  })
+                }
                 className="w-full px-3 py-2.5 text-left transition-colors hover:bg-muted/30"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-medium text-foreground">当前版本</span>
+                  <span className="text-sm font-medium text-foreground">
+                    当前版本
+                  </span>
                   <span className="text-xs text-muted-foreground">最新</span>
                 </div>
               </button>
@@ -162,5 +186,5 @@ export function RevisionViewer({ postId, currentContent, currentTitle, currentEx
         </div>
       )}
     </section>
-  )
+  );
 }

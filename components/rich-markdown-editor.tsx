@@ -1,20 +1,23 @@
-'use client'
+"use client";
 
-import dynamic from 'next/dynamic'
-import { forwardRef, type ComponentType, type ForwardedRef } from 'react'
-import type { MDXEditorMethods, MDXEditorProps } from '@mdxeditor/editor'
-import type { ImageUploadConfig } from '@/lib/image-upload-config'
+import dynamic from "next/dynamic";
+import { forwardRef, type ComponentType, type ForwardedRef } from "react";
+import type { MDXEditorMethods, MDXEditorProps } from "@mdxeditor/editor";
+import type { ImageUploadConfig } from "@/lib/image-upload-config";
 
 type RichMarkdownEditorProps = MDXEditorProps & {
-  imageUploadConfig: ImageUploadConfig
-}
+  imageUploadConfig: ImageUploadConfig;
+};
 
 type InitializedEditorProps = RichMarkdownEditorProps & {
-  editorRef: ForwardedRef<MDXEditorMethods> | null
-}
+  editorRef: ForwardedRef<MDXEditorMethods> | null;
+};
 
 const Editor = dynamic(
-  () => import('./initialized-mdx-editor') as Promise<{ default: ComponentType<InitializedEditorProps> }>,
+  () =>
+    import("./initialized-mdx-editor") as Promise<{
+      default: ComponentType<InitializedEditorProps>;
+    }>,
   {
     ssr: false,
     loading: () => (
@@ -23,10 +26,11 @@ const Editor = dynamic(
       </div>
     ),
   },
-)
+);
 
-export const RichMarkdownEditor = forwardRef<MDXEditorMethods, RichMarkdownEditorProps>((props, ref) => (
-  <Editor {...props} editorRef={ref} />
-))
+export const RichMarkdownEditor = forwardRef<
+  MDXEditorMethods,
+  RichMarkdownEditorProps
+>((props, ref) => <Editor {...props} editorRef={ref} />);
 
-RichMarkdownEditor.displayName = 'RichMarkdownEditor'
+RichMarkdownEditor.displayName = "RichMarkdownEditor";

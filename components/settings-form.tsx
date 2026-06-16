@@ -1,110 +1,134 @@
-'use client'
+"use client";
 
-import { useState, useTransition, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { updateSiteSettings } from '@/lib/actions'
-import type { SiteSettings } from '@/lib/types'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Slider } from '@/components/ui/slider'
-import { Switch } from '@/components/ui/switch'
-import { Textarea } from '@/components/ui/textarea'
+import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/lazy-toast";
+import { updateSiteSettings } from "@/lib/actions";
+import type { SiteSettings } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 
 interface SettingsFormProps {
-  settings: SiteSettings | null
+  settings: SiteSettings | null;
 }
 
 export function SettingsForm({ settings }: SettingsFormProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const [siteName, setSiteName] = useState(settings?.site_name || '')
-  const [siteDescription, setSiteDescription] = useState(settings?.site_description || '')
-  const [baseUrl, setBaseUrl] = useState(settings?.base_url || '')
-  const [authorName, setAuthorName] = useState(settings?.author_name || '')
-  const [defaultOgImageUrl, setDefaultOgImageUrl] = useState(settings?.default_og_image_url || '')
-  const [commentsEnabled, setCommentsEnabled] = useState(settings?.comments_enabled ?? true)
-  const [imageUploadMaxSizeMb, setImageUploadMaxSizeMb] = useState(settings?.image_upload_max_size_mb ?? 10)
-  const [imageCompressionEnabled, setImageCompressionEnabled] = useState(settings?.image_compression_enabled ?? true)
-  const [imageCompressionQuality, setImageCompressionQuality] = useState(settings?.image_compression_quality ?? 82)
-  const [imageMaxWidth, setImageMaxWidth] = useState(settings?.image_max_width ?? 1920)
-  const [imageMaxHeight, setImageMaxHeight] = useState(settings?.image_max_height ?? 1920)
-  const [aboutContent, setAboutContent] = useState(settings?.about_content || '')
-  
-  const socialLinks = settings?.social_links || {}
-  const [twitter, setTwitter] = useState(socialLinks.twitter || '')
-  const [github, setGithub] = useState(socialLinks.github || '')
-  const [linkedin, setLinkedin] = useState(socialLinks.linkedin || '')
-  const [instagram, setInstagram] = useState(socialLinks.instagram || '')
+  const [siteName, setSiteName] = useState(settings?.site_name || "");
+  const [siteDescription, setSiteDescription] = useState(
+    settings?.site_description || "",
+  );
+  const [baseUrl, setBaseUrl] = useState(settings?.base_url || "");
+  const [authorName, setAuthorName] = useState(settings?.author_name || "");
+  const [defaultOgImageUrl, setDefaultOgImageUrl] = useState(
+    settings?.default_og_image_url || "",
+  );
+  const [commentsEnabled, setCommentsEnabled] = useState(
+    settings?.comments_enabled ?? true,
+  );
+  const [imageUploadMaxSizeMb, setImageUploadMaxSizeMb] = useState(
+    settings?.image_upload_max_size_mb ?? 10,
+  );
+  const [imageCompressionEnabled, setImageCompressionEnabled] = useState(
+    settings?.image_compression_enabled ?? true,
+  );
+  const [imageCompressionQuality, setImageCompressionQuality] = useState(
+    settings?.image_compression_quality ?? 82,
+  );
+  const [imageMaxWidth, setImageMaxWidth] = useState(
+    settings?.image_max_width ?? 1920,
+  );
+  const [imageMaxHeight, setImageMaxHeight] = useState(
+    settings?.image_max_height ?? 1920,
+  );
+  const [aboutContent, setAboutContent] = useState(
+    settings?.about_content || "",
+  );
 
-  const [tab, setTab] = useState<'edit' | 'preview'>('edit')
-  const [previewHtml, setPreviewHtml] = useState('')
+  const socialLinks = settings?.social_links || {};
+  const [twitter, setTwitter] = useState(socialLinks.twitter || "");
+  const [github, setGithub] = useState(socialLinks.github || "");
+  const [linkedin, setLinkedin] = useState(socialLinks.linkedin || "");
+  const [instagram, setInstagram] = useState(socialLinks.instagram || "");
+
+  const [tab, setTab] = useState<"edit" | "preview">("edit");
+  const [previewHtml, setPreviewHtml] = useState("");
 
   useEffect(() => {
-    if (tab === 'preview') {
-      import('marked').then(({ marked }) => {
-        import('sanitize-html').then(({ default: sanitizeHtml }) => {
+    if (tab === "preview") {
+      import("marked").then(({ marked }) => {
+        import("sanitize-html").then(({ default: sanitizeHtml }) => {
           Promise.resolve(marked.parse(aboutContent)).then((rawHtml) => {
             const safeHtml = sanitizeHtml(rawHtml, {
-              allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img']),
+              allowedTags: sanitizeHtml.defaults.allowedTags.concat(["img"]),
               allowedAttributes: {
-                a: ['href', 'name', 'target', 'rel'],
-                img: ['src', 'alt', 'title', 'width', 'height', 'loading'],
-                code: ['class'],
-                pre: ['class'],
+                a: ["href", "name", "target", "rel"],
+                img: ["src", "alt", "title", "width", "height", "loading"],
+                code: ["class"],
+                pre: ["class"],
               },
-              allowedSchemes: ['http', 'https', 'mailto', 'tel'],
+              allowedSchemes: ["http", "https", "mailto", "tel"],
               allowProtocolRelative: false,
-            })
-            setPreviewHtml(safeHtml)
-          })
-        })
-      })
+            });
+            setPreviewHtml(safeHtml);
+          });
+        });
+      });
     }
-  }, [tab, aboutContent])
+  }, [tab, aboutContent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const formData = new FormData()
-    formData.append('site_name', siteName)
-    formData.append('site_description', siteDescription)
-    formData.append('base_url', baseUrl)
-    formData.append('author_name', authorName)
-    formData.append('default_og_image_url', defaultOgImageUrl)
-    formData.append('comments_enabled', String(commentsEnabled))
-    formData.append('image_upload_max_size_mb', String(imageUploadMaxSizeMb))
-    formData.append('image_compression_enabled', String(imageCompressionEnabled))
-    formData.append('image_compression_quality', String(imageCompressionQuality))
-    formData.append('image_max_width', String(imageMaxWidth))
-    formData.append('image_max_height', String(imageMaxHeight))
-    formData.append('about_content', aboutContent)
-    formData.append('social_twitter', twitter)
-    formData.append('social_github', github)
-    formData.append('social_linkedin', linkedin)
-    formData.append('social_instagram', instagram)
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("site_name", siteName);
+    formData.append("site_description", siteDescription);
+    formData.append("base_url", baseUrl);
+    formData.append("author_name", authorName);
+    formData.append("default_og_image_url", defaultOgImageUrl);
+    formData.append("comments_enabled", String(commentsEnabled));
+    formData.append("image_upload_max_size_mb", String(imageUploadMaxSizeMb));
+    formData.append(
+      "image_compression_enabled",
+      String(imageCompressionEnabled),
+    );
+    formData.append(
+      "image_compression_quality",
+      String(imageCompressionQuality),
+    );
+    formData.append("image_max_width", String(imageMaxWidth));
+    formData.append("image_max_height", String(imageMaxHeight));
+    formData.append("about_content", aboutContent);
+    formData.append("social_twitter", twitter);
+    formData.append("social_github", github);
+    formData.append("social_linkedin", linkedin);
+    formData.append("social_instagram", instagram);
 
     startTransition(async () => {
       try {
-        const result = await updateSiteSettings(formData)
+        const result = await updateSiteSettings(formData);
         if (!result.success) {
-          toast.error(result.error || '保存失败')
-          return
+          toast.error(result.error || "保存失败");
+          return;
         }
-        toast.success('设置已保存')
-        router.refresh()
+        toast.success("设置已保存");
+        router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : '保存失败')
+        toast.error(err instanceof Error ? err.message : "保存失败");
       }
-    })
-  }
+    });
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <section className="admin-panel space-y-4 p-5">
         <h2 className="admin-section-title">基本信息</h2>
-        
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="siteName">站点名称</Label>
@@ -185,29 +209,27 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
       <section className="admin-panel space-y-4 p-5">
         <h2 className="admin-section-title">关于页面</h2>
-        
+
         <div className="space-y-2">
           <div className="flex items-center justify-between border-b border-border pb-2">
-            <Label htmlFor="aboutContent" className="text-sm font-medium">关于页面内容 (Markdown)</Label>
+            <Label htmlFor="aboutContent" className="text-sm font-medium">
+              关于页面内容 (Markdown)
+            </Label>
             <div className="admin-tabs text-[11px] font-sans">
               <button
                 type="button"
-                onClick={() => setTab('edit')}
+                onClick={() => setTab("edit")}
                 className={`admin-tab px-2.5 py-0.5 ${
-                  tab === 'edit'
-                    ? 'admin-tab-active font-medium'
-                    : ''
+                  tab === "edit" ? "admin-tab-active font-medium" : ""
                 }`}
               >
                 编辑
               </button>
               <button
                 type="button"
-                onClick={() => setTab('preview')}
+                onClick={() => setTab("preview")}
                 className={`admin-tab px-2.5 py-0.5 ${
-                  tab === 'preview'
-                    ? 'admin-tab-active font-medium'
-                    : ''
+                  tab === "preview" ? "admin-tab-active font-medium" : ""
                 }`}
               >
                 预览
@@ -215,7 +237,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             </div>
           </div>
 
-          {tab === 'edit' ? (
+          {tab === "edit" ? (
             <Textarea
               id="aboutContent"
               value={aboutContent}
@@ -225,9 +247,13 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               className="font-mono text-sm"
             />
           ) : (
-            <div 
+            <div
               className="prose-editorial min-h-[220px] max-h-[400px] overflow-y-auto rounded-md border border-border bg-background p-6 text-left"
-              dangerouslySetInnerHTML={{ __html: previewHtml || '<p class="text-muted-foreground/60 text-sm">暂无内容预览...</p>' }}
+              dangerouslySetInnerHTML={{
+                __html:
+                  previewHtml ||
+                  '<p class="text-muted-foreground/60 text-sm">暂无内容预览...</p>',
+              }}
             />
           )}
         </div>
@@ -235,7 +261,7 @@ export function SettingsForm({ settings }: SettingsFormProps) {
 
       <section className="admin-panel space-y-4 p-5">
         <h2 className="admin-section-title">社交链接</h2>
-        
+
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="twitter">Twitter</Label>
@@ -286,7 +312,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       <section className="admin-panel space-y-4 p-5">
         <div>
           <h2 className="admin-section-title">图片上传设置</h2>
-          <p className="mt-1 text-sm text-muted-foreground">控制编辑器图片上传和压缩参数。</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            控制编辑器图片上传和压缩参数。
+          </p>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border bg-background">
@@ -295,7 +323,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
               <Label htmlFor="imageCompressionEnabled" className="font-medium">
                 自动压缩图片
               </Label>
-              <p className="mt-1 text-sm text-muted-foreground">上传前转为 WebP。</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                上传前转为 WebP。
+              </p>
             </div>
             <Switch
               id="imageCompressionEnabled"
@@ -315,7 +345,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                 min={1}
                 max={10}
                 value={imageUploadMaxSizeMb}
-                onChange={(e) => setImageUploadMaxSizeMb(Number(e.target.value))}
+                onChange={(e) =>
+                  setImageUploadMaxSizeMb(Number(e.target.value))
+                }
               />
               <p className="text-xs text-muted-foreground">服务端校验上限。</p>
             </div>
@@ -347,7 +379,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <Label htmlFor="imageCompressionQuality">压缩质量</Label>
-                <span className="text-sm tabular-nums text-muted-foreground">{imageCompressionQuality}%</span>
+                <span className="text-sm tabular-nums text-muted-foreground">
+                  {imageCompressionQuality}%
+                </span>
               </div>
               <Slider
                 id="imageCompressionQuality"
@@ -355,7 +389,9 @@ export function SettingsForm({ settings }: SettingsFormProps) {
                 max={95}
                 step={1}
                 value={[imageCompressionQuality]}
-                onValueChange={(value) => setImageCompressionQuality(value[0] ?? 82)}
+                onValueChange={(value) =>
+                  setImageCompressionQuality(value[0] ?? 82)
+                }
                 disabled={!imageCompressionEnabled || isPending}
               />
             </div>
@@ -364,8 +400,8 @@ export function SettingsForm({ settings }: SettingsFormProps) {
       </section>
 
       <Button type="submit" disabled={isPending}>
-        {isPending ? '保存中...' : '保存设置'}
+        {isPending ? "保存中..." : "保存设置"}
       </Button>
     </form>
-  )
+  );
 }

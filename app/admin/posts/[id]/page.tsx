@@ -1,23 +1,27 @@
-import { notFound } from 'next/navigation'
-import { getPostByIdAdmin, getAllTagsAdmin, getSiteSettingsAdmin } from '@/lib/admin-queries'
-import { getImageUploadConfig } from '@/lib/image-upload-config'
-import { PostEditor } from '@/components/post-editor'
-import { RevisionViewer } from '@/components/revision-viewer'
+import { notFound } from "next/navigation";
+import {
+  getPostByIdAdmin,
+  getAllTagsAdmin,
+  getSiteSettingsAdmin,
+} from "@/lib/admin-queries";
+import { getImageUploadConfig } from "@/lib/image-upload-config";
+import { PostEditor } from "@/components/post-editor";
+import { RevisionViewer } from "@/components/revision-viewer";
 
 interface EditPostPageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditPostPage({ params }: EditPostPageProps) {
-  const { id } = await params
+  const { id } = await params;
   const [post, tags, settings] = await Promise.all([
     getPostByIdAdmin(id),
     getAllTagsAdmin(),
     getSiteSettingsAdmin(),
-  ])
+  ]);
 
   if (!post) {
-    notFound()
+    notFound();
   }
 
   return (
@@ -25,7 +29,11 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
       <div className="admin-page-header">
         <h1 className="admin-page-title">编辑文章</h1>
       </div>
-      <PostEditor post={post} allTags={tags} uploadConfig={getImageUploadConfig(settings)}>
+      <PostEditor
+        post={post}
+        allTags={tags}
+        uploadConfig={getImageUploadConfig(settings)}
+      >
         <RevisionViewer
           postId={post.id}
           currentContent={post.content_markdown}
@@ -34,5 +42,5 @@ export default async function EditPostPage({ params }: EditPostPageProps) {
         />
       </PostEditor>
     </div>
-  )
+  );
 }

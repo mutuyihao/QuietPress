@@ -1,8 +1,8 @@
-'use client'
+"use client";
 
-import { ImageIcon } from 'lucide-react'
-import type { StoredFile } from '@/lib/storage'
-import { Button } from '@/components/ui/button'
+import { ImageIcon } from "lucide-react";
+import type { StoredFile } from "@/lib/storage";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,13 +10,13 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { MediaLibrary } from '@/components/media-library'
+} from "@/components/ui/dialog";
+import { MediaLibrary } from "@/components/media-library";
 
 interface MediaPickerDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSelect: (file: StoredFile) => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSelect: (file: StoredFile) => void;
 }
 
 export function MediaPickerDialog({
@@ -27,7 +27,12 @@ export function MediaPickerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 text-xs">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs"
+        >
           <ImageIcon className="h-3.5 w-3.5" />
           媒体库
         </Button>
@@ -42,5 +47,5 @@ export function MediaPickerDialog({
         <MediaLibrary mode="select" onSelect={onSelect} />
       </DialogContent>
     </Dialog>
-  )
+  );
 }

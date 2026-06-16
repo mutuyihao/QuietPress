@@ -1,4 +1,4 @@
-import { MigrationManager } from '@/components/migration-manager'
+import { MigrationManager } from "@/components/migration-manager";
 
 export default function AdminSettingsMigrationPage() {
   return (
@@ -11,5 +11,5 @@ export default function AdminSettingsMigrationPage() {
       </div>
       <MigrationManager />
     </div>
-  )
+  );
 }

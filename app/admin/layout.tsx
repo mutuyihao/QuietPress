@@ -1,8 +1,8 @@
-import Link from 'next/link'
-import { redirect } from 'next/navigation'
-import { LogOut, UserCircle } from 'lucide-react'
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { LogOut, UserCircle } from "lucide-react";
 
-import { AdminNavLinks } from '@/components/admin-nav-links'
+import { AdminNavLinks } from "@/components/admin-nav-links";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,30 +10,40 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Toaster } from '@/components/ui/sonner'
-import { getAdminSession } from '@/lib/admin-auth'
-import packageJson from '@/package.json'
+} from "@/components/ui/dropdown-menu";
+import { Toaster } from "@/components/ui/sonner";
+import { getAdminSession } from "@/lib/admin-auth";
+import packageJson from "@/package.json";
+
+export const dynamic = "force-dynamic";
 
 function getRuntimeVersion() {
-  const version = process.env.APP_VERSION || process.env.NEXT_PUBLIC_APP_VERSION || packageJson.version
-  const commitSha = process.env.VERCEL_GIT_COMMIT_SHA || process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA
-  const shortCommitSha = commitSha?.slice(0, 7)
+  const version =
+    process.env.APP_VERSION ||
+    process.env.NEXT_PUBLIC_APP_VERSION ||
+    packageJson.version;
+  const commitSha =
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.NEXT_PUBLIC_VERCEL_GIT_COMMIT_SHA;
+  const shortCommitSha = commitSha?.slice(0, 7);
 
-  return shortCommitSha ? `v${version} (${shortCommitSha})` : `v${version}`
+  return shortCommitSha ? `v${version} (${shortCommitSha})` : `v${version}`;
 }
 
 async function AdminNav() {
-  const adminSession = await getAdminSession()
+  const adminSession = await getAdminSession();
   if (!adminSession) {
-    redirect('/auth/login')
+    redirect("/auth/login");
   }
-  const runtimeVersion = getRuntimeVersion()
+  const runtimeVersion = getRuntimeVersion();
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
-        <Link href="/admin" className="shrink-0 text-sm font-semibold text-foreground sm:text-base">
+        <Link
+          href="/admin"
+          className="shrink-0 text-sm font-semibold text-foreground sm:text-base"
+        >
           管理后台
         </Link>
 
@@ -67,9 +77,11 @@ async function AdminNav() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
               <DropdownMenuLabel className="space-y-1">
-                <span className="block text-xs font-normal text-muted-foreground">当前账号</span>
+                <span className="block text-xs font-normal text-muted-foreground">
+                  当前账号
+                </span>
                 <span className="block truncate text-sm font-medium text-foreground">
-                  {adminSession.user.email || '未知邮箱'}
+                  {adminSession.user.email || "未知邮箱"}
                 </span>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -98,13 +110,13 @@ async function AdminNav() {
         </div>
       </div>
     </header>
-  )
+  );
 }
 
 async function PasswordChangeNotice() {
-  const adminSession = await getAdminSession()
+  const adminSession = await getAdminSession();
   if (!adminSession?.user.user_metadata?.must_change_password) {
-    return null
+    return null;
   }
 
   return (
@@ -113,18 +125,21 @@ async function PasswordChangeNotice() {
         <span>
           当前账号仍在使用一键部署创建的临时密码。正式发布前请先修改密码。
         </span>
-        <Link href="/admin/account" className="font-medium underline underline-offset-4">
+        <Link
+          href="/admin/account"
+          className="font-medium underline underline-offset-4"
+        >
           修改密码
         </Link>
       </div>
     </div>
-  )
+  );
 }
 
 export default function AdminLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <div className="min-h-screen bg-background">
@@ -135,5 +150,5 @@ export default function AdminLayout({
       </main>
       <Toaster position="top-right" offset={72} closeButton visibleToasts={3} />
     </div>
-  )
+  );
 }

@@ -1,100 +1,154 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { toast } from 'sonner'
-import { Search as SearchIcon, FileText, ArrowRight, Eye, Calendar, Tag, Trash2, Archive, Send, CheckSquare, X } from 'lucide-react'
-import { formatDate } from '@/lib/blog-utils'
-import { batchUpdatePosts, batchDeletePosts } from '@/lib/actions'
-import type { PostWithTags, PostStatus } from '@/lib/types'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
+import { useOptimistic, useState, useTransition } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "@/components/ui/lazy-toast";
+import {
+  Search as SearchIcon,
+  FileText,
+  ArrowRight,
+  Eye,
+  Calendar,
+  Tag,
+  Trash2,
+  Archive,
+  Send,
+  CheckSquare,
+  X,
+} from "lucide-react";
+import { formatDate } from "@/lib/blog-utils";
+import { batchUpdatePosts, batchDeletePosts } from "@/lib/actions";
+import type { PostWithTags, PostStatus } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface AdminPostListProps {
-  posts: PostWithTags[]
+  posts: PostWithTags[];
 }
+
+type OptimisticPostsAction =
+  | { type: "delete"; ids: Set<string> }
+  | { type: "status"; ids: Set<string>; status: PostStatus };
 
 const statusColors: Record<PostStatus, string> = {
-  draft: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
-  scheduled: 'bg-sky-500/10 text-sky-500 border border-sky-500/20',
-  published: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
-  archived: 'bg-zinc-500/10 text-zinc-500 border border-zinc-500/20',
-}
+  draft: "bg-amber-500/10 text-amber-500 border border-amber-500/20",
+  scheduled: "bg-sky-500/10 text-sky-500 border border-sky-500/20",
+  published: "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20",
+  archived: "bg-zinc-500/10 text-zinc-500 border border-zinc-500/20",
+};
 
 const statusLabels: Record<PostStatus, string> = {
-  draft: '草稿',
-  scheduled: '已计划',
-  published: '已发布',
-  archived: '已归档',
-}
+  draft: "草稿",
+  scheduled: "已计划",
+  published: "已发布",
+  archived: "已归档",
+};
 
 export function AdminPostList({ posts }: AdminPostListProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = useTransition()
-  const [query, setQuery] = useState('')
-  const [activeTab, setActiveTab] = useState<'all' | PostStatus>('all')
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const router = useRouter();
+  const [optimisticPosts, applyOptimisticPosts] = useOptimistic(
+    posts,
+    (currentPosts, action: OptimisticPostsAction) => {
+      if (action.type === "delete") {
+        return currentPosts.filter((post) => !action.ids.has(post.id));
+      }
 
-  const tabs: { value: 'all' | PostStatus; label: string; count: number }[] = [
-    { value: 'all', label: '全部', count: posts.length },
-    { value: 'published', label: '已发布', count: posts.filter((p) => p.status === 'published').length },
-    { value: 'draft', label: '草稿', count: posts.filter((p) => p.status === 'draft').length },
-    { value: 'archived', label: '已归档', count: posts.filter((p) => p.status === 'archived').length },
-  ]
+      return currentPosts.map((post) =>
+        action.ids.has(post.id) ? { ...post, status: action.status } : post,
+      );
+    },
+  );
+  const [isPending, startTransition] = useTransition();
+  const [query, setQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | PostStatus>("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  const filteredPosts = posts.filter((post) => {
+  const tabs: { value: "all" | PostStatus; label: string; count: number }[] = [
+    { value: "all", label: "全部", count: optimisticPosts.length },
+    {
+      value: "published",
+      label: "已发布",
+      count: optimisticPosts.filter((p) => p.status === "published").length,
+    },
+    {
+      value: "draft",
+      label: "草稿",
+      count: optimisticPosts.filter((p) => p.status === "draft").length,
+    },
+    {
+      value: "archived",
+      label: "已归档",
+      count: optimisticPosts.filter((p) => p.status === "archived").length,
+    },
+  ];
+
+  const filteredPosts = optimisticPosts.filter((post) => {
     const matchesSearch =
       post.title.toLowerCase().includes(query.toLowerCase()) ||
-      post.tags.some((t) => t.name.toLowerCase().includes(query.toLowerCase())) ||
-      (post.excerpt && post.excerpt.toLowerCase().includes(query.toLowerCase()))
+      post.tags.some((t) =>
+        t.name.toLowerCase().includes(query.toLowerCase()),
+      ) ||
+      (post.excerpt &&
+        post.excerpt.toLowerCase().includes(query.toLowerCase()));
 
-    const matchesTab = activeTab === 'all' || post.status === activeTab
+    const matchesTab = activeTab === "all" || post.status === activeTab;
 
-    return matchesSearch && matchesTab
-  })
+    return matchesSearch && matchesTab;
+  });
 
   const toggleSelectAll = () => {
     if (selectedIds.size === filteredPosts.length) {
-      setSelectedIds(new Set())
+      setSelectedIds(new Set());
     } else {
-      setSelectedIds(new Set(filteredPosts.map((p) => p.id)))
+      setSelectedIds(new Set(filteredPosts.map((p) => p.id)));
     }
-  }
+  };
 
   const toggleSelect = (id: string) => {
-    const next = new Set(selectedIds)
+    const next = new Set(selectedIds);
     if (next.has(id)) {
-      next.delete(id)
+      next.delete(id);
     } else {
-      next.add(id)
+      next.add(id);
     }
-    setSelectedIds(next)
-  }
+    setSelectedIds(next);
+  };
 
-  const handleBatchAction = (action: 'publish' | 'archive' | 'delete') => {
-    if (selectedIds.size === 0) return
+  const handleBatchAction = (action: "publish" | "archive" | "delete") => {
+    if (selectedIds.size === 0) return;
 
     startTransition(async () => {
       try {
-        const ids = Array.from(selectedIds)
-        if (action === 'delete') {
-          await batchDeletePosts(ids)
-          toast.success(`\u5df2\u5220\u9664 ${ids.length} \u7bc7\u6587\u7ae0`)
+        const ids = Array.from(selectedIds);
+        const idSet = new Set(ids);
+
+        if (action === "delete") {
+          applyOptimisticPosts({ type: "delete", ids: idSet });
+          setSelectedIds(new Set());
+          const result = await batchDeletePosts(ids);
+          if (!result.success) throw new Error(result.error);
+          toast.success(`\u5df2\u5220\u9664 ${ids.length} \u7bc7\u6587\u7ae0`);
         } else {
-          await batchUpdatePosts(ids, action === 'publish' ? 'published' : 'archived')
-          toast.success(action === 'publish'
-            ? `\u5df2\u53d1\u5e03 ${ids.length} \u7bc7\u6587\u7ae0`
-            : `\u5df2\u5f52\u6863 ${ids.length} \u7bc7\u6587\u7ae0`)
+          const status = action === "publish" ? "published" : "archived";
+          applyOptimisticPosts({ type: "status", ids: idSet, status });
+          setSelectedIds(new Set());
+          const result = await batchUpdatePosts(ids, status);
+          if (!result.success) throw new Error(result.error);
+          toast.success(
+            action === "publish"
+              ? `\u5df2\u53d1\u5e03 ${ids.length} \u7bc7\u6587\u7ae0`
+              : `\u5df2\u5f52\u6863 ${ids.length} \u7bc7\u6587\u7ae0`,
+          );
         }
-        setSelectedIds(new Set())
-        router.refresh()
+        router.refresh();
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : '批量操作失败')
+        toast.error(err instanceof Error ? err.message : "批量操作失败");
+        router.refresh();
       }
-    })
-  }
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -113,20 +167,23 @@ export function AdminPostList({ posts }: AdminPostListProps) {
         <div className="admin-tabs shrink-0 overflow-x-auto text-xs [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {tabs.map((tab) => (
             <button
+              type="button"
               key={tab.value}
               onClick={() => setActiveTab(tab.value)}
               className={cn(
                 "admin-tab flex h-8 shrink-0 items-center gap-1.5",
-                activeTab === tab.value
-                  ? "admin-tab-active"
-                  : "",
+                activeTab === tab.value ? "admin-tab-active" : "",
               )}
             >
               <span>{tab.label}</span>
-              <span className={cn(
-                "rounded-full px-1.5 text-[10px] leading-4",
-                activeTab === tab.value ? "bg-muted text-foreground" : "bg-background text-muted-foreground",
-              )}>
+              <span
+                className={cn(
+                  "rounded-full px-1.5 text-[10px] leading-4",
+                  activeTab === tab.value
+                    ? "bg-muted text-foreground"
+                    : "bg-background text-muted-foreground",
+                )}
+              >
                 {tab.count}
               </span>
             </button>
@@ -138,10 +195,13 @@ export function AdminPostList({ posts }: AdminPostListProps) {
       {filteredPosts.length === 0 ? (
         <div className="admin-empty py-16">
           <FileText className="h-10 w-10 text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground font-medium">没有找到符合条件的文章</p>
+          <p className="text-sm text-muted-foreground font-medium">
+            没有找到符合条件的文章
+          </p>
           {query && (
             <button
-              onClick={() => setQuery('')}
+              type="button"
+              onClick={() => setQuery("")}
               className="mt-2 text-xs text-primary hover:underline"
             >
               清除搜索条件
@@ -164,18 +224,21 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                 <tr className="border-b border-border bg-muted/25">
                   <th className="h-14 px-4 py-0 align-middle">
                     <button
+                      type="button"
                       onClick={toggleSelectAll}
                       className={cn(
                         "inline-flex h-4 w-4 items-center justify-center rounded border-2 align-middle transition-all cursor-pointer",
-                        selectedIds.size === filteredPosts.length && filteredPosts.length > 0
+                        selectedIds.size === filteredPosts.length &&
+                          filteredPosts.length > 0
                           ? "bg-primary border-primary text-primary-foreground"
                           : "border-border hover:border-foreground/40",
                       )}
                       aria-label="全选文章"
                     >
-                      {selectedIds.size === filteredPosts.length && filteredPosts.length > 0 && (
-                        <CheckSquare className="h-3 w-3" />
-                      )}
+                      {selectedIds.size === filteredPosts.length &&
+                        filteredPosts.length > 0 && (
+                          <CheckSquare className="h-3 w-3" />
+                        )}
                     </button>
                   </th>
                   {selectedIds.size > 0 ? (
@@ -196,7 +259,7 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleBatchAction('publish')}
+                          onClick={() => handleBatchAction("publish")}
                           disabled={isPending}
                           className="gap-1.5"
                         >
@@ -206,7 +269,7 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => handleBatchAction('archive')}
+                          onClick={() => handleBatchAction("archive")}
                           disabled={isPending}
                           className="gap-1.5"
                         >
@@ -216,7 +279,7 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                         <Button
                           size="sm"
                           variant="destructive"
-                          onClick={() => handleBatchAction('delete')}
+                          onClick={() => handleBatchAction("delete")}
                           disabled={isPending}
                           className="gap-1.5"
                         >
@@ -227,21 +290,35 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                     </th>
                   ) : (
                     <>
-                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">文章标题</th>
-                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">状态</th>
-                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">浏览</th>
-                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">更新时间</th>
-                      <th className="h-14 px-2 py-0 text-center align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">操作</th>
+                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">
+                        文章标题
+                      </th>
+                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">
+                        状态
+                      </th>
+                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">
+                        浏览
+                      </th>
+                      <th className="h-14 px-3 py-0 align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">
+                        更新时间
+                      </th>
+                      <th className="h-14 px-2 py-0 text-center align-middle text-xs font-semibold tracking-wide text-muted-foreground/75">
+                        操作
+                      </th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filteredPosts.map((post) => (
-                  <tr key={post.id} className="group h-[72px] transition-colors hover:bg-muted/25">
+                  <tr
+                    key={post.id}
+                    className="group h-[72px] transition-colors hover:bg-muted/25"
+                  >
                     <td className="px-4 py-0 align-middle">
                       <div className="flex min-h-[72px] items-center py-3">
                         <button
+                          type="button"
                           onClick={() => toggleSelect(post.id)}
                           className={cn(
                             "inline-flex h-4 w-4 items-center justify-center rounded border-2 align-middle transition-all cursor-pointer",
@@ -279,10 +356,12 @@ export function AdminPostList({ posts }: AdminPostListProps) {
                     </td>
                     <td className="px-3 py-0 align-middle">
                       <div className="flex min-h-[72px] items-center py-3">
-                        <span className={cn(
-                          "inline-flex h-6 items-center whitespace-nowrap rounded-full px-2.5 text-[11px] font-medium leading-none",
-                          statusColors[post.status],
-                        )}>
+                        <span
+                          className={cn(
+                            "inline-flex h-6 items-center whitespace-nowrap rounded-full px-2.5 text-[11px] font-medium leading-none",
+                            statusColors[post.status],
+                          )}
+                        >
                           {statusLabels[post.status]}
                         </span>
                       </div>
@@ -320,5 +399,5 @@ export function AdminPostList({ posts }: AdminPostListProps) {
         </div>
       )}
     </div>
-  )
+  );
 }
