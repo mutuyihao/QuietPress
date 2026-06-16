@@ -1,15 +1,15 @@
-import Link from 'next/link'
-import type { PostWithTags } from '@/lib/types'
-import { formatDate, calculateReadingTime } from '@/lib/blog-utils'
-import { postPath } from '@/lib/route-segments'
+import Link from "next/link";
+import type { PostWithTags } from "@/lib/types";
+import { formatDate, calculateReadingTime } from "@/lib/blog-utils";
+import { postPath, tagPath } from "@/lib/route-segments";
 
 interface PostCardProps {
-  post: PostWithTags
-  index?: number
+  post: PostWithTags;
+  index?: number;
 }
 
 export function PostCard({ post, index = 0 }: PostCardProps) {
-  const readingTime = calculateReadingTime(post.content_markdown)
+  const readingTime = calculateReadingTime(post.content_markdown);
 
   return (
     <article
@@ -44,7 +44,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
           {post.tags.map((tag) => (
             <Link
               key={tag.id}
-              href={`/tags/${tag.slug}`}
+              href={tagPath(tag.slug)}
               className="nav-link text-[12px] tracking-wide text-muted-foreground transition-editorial hover:text-foreground"
             >
               {tag.name}
@@ -53,5 +53,5 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
         </div>
       )}
     </article>
-  )
+  );
 }

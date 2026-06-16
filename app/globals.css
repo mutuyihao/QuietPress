@@ -1,6 +1,6 @@
-@import 'tailwindcss';
-@import 'tw-animate-css';
-@import '@mdxeditor/editor/style.css';
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@mdxeditor/editor/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -82,9 +82,11 @@
 }
 
 @theme inline {
-  --font-sans: 'Inter', 'Inter Fallback', system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', 'Source Serif 4 Fallback', Georgia, 'Times New Roman', serif;
-  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --font-sans: "Inter", "Inter Fallback", system-ui, sans-serif;
+  --font-serif:
+    "Source Serif 4", "Source Serif 4 Fallback", Georgia, "Times New Roman",
+    serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -133,7 +135,10 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+    font-feature-settings:
+      "kern" 1,
+      "liga" 1,
+      "calt" 1;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -151,13 +156,13 @@ html {
   }
 }
 
-.toaster [data-sonner-toast][data-type='error'] {
+.toaster [data-sonner-toast][data-type="error"] {
   background: var(--toast-error-bg);
   border-color: var(--toast-error-border);
   color: var(--toast-error-text);
 }
 
-.toaster [data-sonner-toast][data-type='error'] [data-close-button] {
+.toaster [data-sonner-toast][data-type="error"] [data-close-button] {
   background: var(--toast-error-bg);
   border-color: var(--toast-error-border);
   color: var(--toast-error-text);
@@ -248,7 +253,9 @@ html {
   font-weight: 500;
   line-height: 1rem;
   padding: 0.375rem 0.875rem;
-  transition: color 160ms ease, background-color 160ms ease;
+  transition:
+    color 160ms ease,
+    background-color 160ms ease;
 }
 
 .admin-tab:hover {
@@ -513,12 +520,12 @@ html body[data-scroll-locked] .width-before-scroll-bar {
 }
 
 .rich-editor-shell .mdxeditor-toolbar button,
-.rich-editor-shell .mdxeditor-toolbar [role='button'] {
+.rich-editor-shell .mdxeditor-toolbar [role="button"] {
   color: var(--foreground);
 }
 
 .rich-editor-shell .mdxeditor-toolbar button:hover,
-.rich-editor-shell .mdxeditor-toolbar [role='button']:hover {
+.rich-editor-shell .mdxeditor-toolbar [role="button"]:hover {
   background: var(--muted);
 }
 
@@ -534,11 +541,11 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   outline: none;
 }
 
-.rich-editor-shell .rich-editor-content[class*='_placeholder_'] {
+.rich-editor-shell .rich-editor-content[class*="_placeholder_"] {
   color: color-mix(in oklch, var(--muted-foreground) 48%, transparent);
 }
 
-.rich-editor-content [data-lexical-decorator='true'] {
+.rich-editor-content [data-lexical-decorator="true"] {
   margin-block: 1.5rem;
 }
 
@@ -556,7 +563,9 @@ html body[data-scroll-locked] .width-before-scroll-bar {
 }
 
 .rich-editor-loading {
-  height: calc(var(--rich-editor-content-height, clamp(360px, 58vh, 640px)) + 3rem);
+  height: calc(
+    var(--rich-editor-content-height, clamp(360px, 58vh, 640px)) + 3rem
+  );
 }
 
 .rich-editor-shell .cm-gutters {
@@ -607,7 +616,7 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   text-decoration: none;
 }
 .nav-link::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: -2px;
@@ -629,7 +638,7 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   text-decoration: none;
 }
 .admin-header-link::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: -2px;
@@ -641,8 +650,8 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .admin-header-link:hover::after,
-.admin-header-link[data-active='true']::after,
-.admin-header-link[aria-current='page']::after {
+.admin-header-link[data-active="true"]::after,
+.admin-header-link[aria-current="page"]::after {
   transform: scaleX(1);
   transform-origin: left;
 }
@@ -661,7 +670,9 @@ html body[data-scroll-locked] .width-before-scroll-bar {
 
 /* ── Smooth color transitions ── */
 .transition-editorial {
-  transition: color 0.3s ease, opacity 0.3s ease;
+  transition:
+    color 0.3s ease,
+    opacity 0.3s ease;
 }
 
 /* ── Prism Syntax Highlighting Styles ── */

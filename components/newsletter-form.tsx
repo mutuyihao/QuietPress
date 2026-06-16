@@ -1,12 +1,13 @@
-'use client'
+"use client";
 
-import { useState, useTransition } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Mail, CheckCircle, X } from 'lucide-react'
+import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Mail, CheckCircle, X } from "lucide-react";
+import { readApiJson } from "@/lib/api-client";
 
 export function NewsletterTrigger() {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <>
@@ -33,7 +34,9 @@ export function NewsletterTrigger() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <h3 className="font-serif text-sm font-semibold text-foreground">邮件订阅</h3>
+                <h3 className="font-serif text-sm font-semibold text-foreground">
+                  邮件订阅
+                </h3>
               </div>
               <button
                 type="button"
@@ -52,41 +55,39 @@ export function NewsletterTrigger() {
         </div>
       )}
     </>
-  )
+  );
 }
 
 function NewsletterFormContent() {
-  const [isPending, startTransition] = useTransition()
-  const [email, setEmail] = useState('')
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition();
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email.trim()) return
+    e.preventDefault();
+    if (!email.trim()) return;
 
-    setError(null)
-    setMessage(null)
+    setError(null);
+    setMessage(null);
 
     startTransition(async () => {
       try {
-        const res = await fetch('/api/newsletter', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/newsletter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: email.trim() }),
-        })
-        const data = await res.json()
-        if (data.error) {
-          setError(data.error)
-        } else {
-          setMessage(data.message || '订阅成功！')
-          setEmail('')
-        }
-      } catch {
-        setError('网络错误，请稍后重试')
+        });
+        const data = await readApiJson<{ message?: string }>(res);
+        setMessage(data.message || "订阅成功！");
+        setEmail("");
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "网络错误，请稍后重试",
+        );
       }
-    })
-  }
+    });
+  };
 
   return (
     <>
@@ -107,12 +108,12 @@ function NewsletterFormContent() {
             required
           />
           <Button type="submit" size="sm" disabled={isPending}>
-            {isPending ? '...' : '订阅'}
+            {isPending ? "..." : "订阅"}
           </Button>
         </form>
       )}
 
       {error && <p className="text-xs text-destructive">{error}</p>}
     </>
-  )
+  );
 }

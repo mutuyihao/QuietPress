@@ -9,7 +9,7 @@ export default function PublicLoading() {
         {/* Reading time / tags Placeholder */}
         <div className="h-4 bg-muted rounded w-1/2 mt-5" />
       </div>
-      
+
       {/* Content Body Placeholder */}
       <div className="mt-16 space-y-6">
         <div className="h-4 bg-muted rounded w-full" />
@@ -21,5 +21,5 @@ export default function PublicLoading() {
         <div className="h-4 bg-muted rounded w-3/4" />
       </div>
     </div>
-  )
+  );
 }

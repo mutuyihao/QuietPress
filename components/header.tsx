@@ -1,25 +1,25 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { MenuIcon } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { ScrollProgress } from '@/components/scroll-progress'
-import { Search } from '@/components/search'
+import { useState } from "react";
+import Link from "next/link";
+import { MenuIcon } from "lucide-react";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ScrollProgress } from "@/components/scroll-progress";
+import { Search } from "@/components/search";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from '@/components/ui/sheet'
+} from "@/components/ui/sheet";
 
 interface HeaderProps {
-  siteName: string
+  siteName: string;
 }
 
 export function Header({ siteName }: HeaderProps) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-md">
@@ -55,6 +55,7 @@ export function Header({ siteName }: HeaderProps) {
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
                 <button
+                  type="button"
                   className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="打开导航菜单"
                 >
@@ -63,7 +64,9 @@ export function Header({ siteName }: HeaderProps) {
               </SheetTrigger>
               <SheetContent side="right" className="w-64">
                 <SheetHeader>
-                  <SheetTitle className="font-serif text-lg">{siteName}</SheetTitle>
+                  <SheetTitle className="font-serif text-lg">
+                    {siteName}
+                  </SheetTitle>
                 </SheetHeader>
                 <nav className="flex flex-col gap-1 px-4">
                   <Link
@@ -95,5 +98,5 @@ export function Header({ siteName }: HeaderProps) {
       </div>
       <ScrollProgress />
     </header>
-  )
+  );
 }

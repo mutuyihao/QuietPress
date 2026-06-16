@@ -1,21 +1,21 @@
-import Link from 'next/link'
-import { Github, Twitter, Linkedin, Instagram } from 'lucide-react'
+import Link from "next/link";
+import { Github, Twitter, Linkedin, Instagram } from "lucide-react";
 // import { NewsletterTrigger } from '@/components/newsletter-form'
 
 interface FooterProps {
-  siteName: string
-  socialLinks?: Record<string, string>
+  siteName: string;
+  socialLinks?: Record<string, string>;
 }
 
 export function Footer({ siteName, socialLinks = {} }: FooterProps) {
   const platforms = [
-    { name: 'github', icon: Github, label: 'GitHub' },
-    { name: 'twitter', icon: Twitter, label: 'Twitter' },
-    { name: 'linkedin', icon: Linkedin, label: 'LinkedIn' },
-    { name: 'instagram', icon: Instagram, label: 'Instagram' },
-  ]
+    { name: "github", icon: Github, label: "GitHub" },
+    { name: "twitter", icon: Twitter, label: "Twitter" },
+    { name: "linkedin", icon: Linkedin, label: "LinkedIn" },
+    { name: "instagram", icon: Instagram, label: "Instagram" },
+  ];
 
-  const activeLinks = platforms.filter((p) => socialLinks[p.name])
+  const activeLinks = platforms.filter((p) => socialLinks[p.name]);
 
   return (
     <footer className="mt-auto">
@@ -59,5 +59,5 @@ export function Footer({ siteName, socialLinks = {} }: FooterProps) {
         </div>
       </div>
     </footer>
-  )
+  );
 }

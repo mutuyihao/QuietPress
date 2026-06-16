@@ -1,34 +1,54 @@
-import { notFound } from 'next/navigation'
-import Link from 'next/link'
-import Image from 'next/image'
-import { getPostBySlug, getSiteSettings } from '@/lib/queries'
-import { markdownToHtml, formatDate, calculateReadingTime } from '@/lib/blog-utils'
-import { DEFAULT_SITE_NAME } from '@/lib/site-defaults'
-import { CodeBlockEnhancer } from '@/components/code-block-enhancer'
-import { ViewCounter } from '@/components/view-counter'
-import { ShareButton } from '@/components/share-button'
-import { TOC } from '@/components/toc'
-import { ArticleLD, BreadcrumbLD } from '@/components/json-ld'
-import { RelatedPosts } from '@/components/related-posts'
-import { CommentSection } from '@/components/comment-section'
-import { getRelatedPosts } from '@/lib/related-posts'
-import type { Metadata } from 'next'
+import { notFound } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  getPostBySlug,
+  getPublishedPostSlugs,
+  getSiteSettings,
+} from "@/lib/queries";
+import {
+  markdownToHtml,
+  formatDate,
+  calculateReadingTime,
+} from "@/lib/blog-utils";
+import { DEFAULT_SITE_NAME } from "@/lib/site-defaults";
+import { CodeBlockEnhancer } from "@/components/code-block-enhancer";
+import { ViewCounter } from "@/components/view-counter";
+import { ShareButton } from "@/components/share-button";
+import { TOC } from "@/components/toc";
+import { ArticleLD, BreadcrumbLD } from "@/components/json-ld";
+import { RelatedPosts } from "@/components/related-posts";
+import { CommentSection } from "@/components/comment-section";
+import { getRelatedPosts } from "@/lib/related-posts";
+import { postUrl, tagPath } from "@/lib/route-segments";
+import type { Metadata } from "next";
 
-export const revalidate = 86400
+export const revalidate = 86400;
+export const dynamicParams = true;
 
 interface PostPageProps {
-  params: Promise<{ slug: string }>
+  params: Promise<{ slug: string }>;
 }
 
-export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
-  const { slug } = await params
-  const post = await getPostBySlug(slug)
-  const settings = await getSiteSettings()
+export async function generateStaticParams() {
+  const slugs = await getPublishedPostSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
-  if (!post) return { title: 'Post Not Found' }
+export async function generateMetadata({
+  params,
+}: PostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
+  const settings = await getSiteSettings();
 
-  const title = post.seo_title || post.title
-  const description = post.seo_description || post.excerpt || `${post.title} - ${settings?.site_name || DEFAULT_SITE_NAME}`
+  if (!post) return { title: "Post Not Found" };
+
+  const title = post.seo_title || post.title;
+  const description =
+    post.seo_description ||
+    post.excerpt ||
+    `${post.title} - ${settings?.site_name || DEFAULT_SITE_NAME}`;
 
   return {
     title,
@@ -36,44 +56,54 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     openGraph: {
       title,
       description,
-      type: 'article',
+      type: "article",
       publishedTime: post.published_at || undefined,
-      images: post.cover_image_url ? [{ url: post.cover_image_url, width: 1200, height: 630 }] : undefined,
+      images: post.cover_image_url
+        ? [{ url: post.cover_image_url, width: 1200, height: 630 }]
+        : undefined,
     },
     twitter: {
-      card: 'summary_large_image',
+      card: "summary_large_image",
       title,
       description,
       images: post.cover_image_url ? [post.cover_image_url] : undefined,
     },
     robots: post.noindex ? { index: false } : undefined,
-    alternates: post.canonical_url ? { canonical: post.canonical_url } : undefined,
-  }
+    alternates: post.canonical_url
+      ? { canonical: post.canonical_url }
+      : undefined,
+  };
 }
 
 export default async function PostPage({ params }: PostPageProps) {
-  const { slug } = await params
-  const post = await getPostBySlug(slug)
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
-    notFound()
+    notFound();
   }
 
-  const settings = await getSiteSettings()
-  const commentsEnabled = settings?.comments_enabled ?? true
-  const contentHtml = await markdownToHtml(post.content_markdown)
-  const siteUrl = settings?.base_url || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+  const settings = await getSiteSettings();
+  const commentsEnabled = settings?.comments_enabled ?? true;
+  const contentHtml = await markdownToHtml(post.content_markdown);
+  const siteUrl =
+    settings?.base_url ||
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    "http://localhost:3000";
 
-  const tagIds = post.tags.map((t) => t.id)
-  const relatedPosts = await getRelatedPosts(post.id, tagIds, 3)
+  const tagIds = post.tags.map((t) => t.id);
+  const relatedPosts = await getRelatedPosts(post.id, tagIds, 3);
 
   return (
     <article className="max-w-[640px] mx-auto px-6 py-16 sm:py-20 relative">
       <ArticleLD post={post} settings={settings} />
       <BreadcrumbLD
         items={[
-          { name: settings?.site_name || DEFAULT_SITE_NAME, url: siteUrl.replace(/\/+$/, '') },
-          { name: post.title, url: `${siteUrl.replace(/\/+$/, '')}/posts/${encodeURIComponent(post.slug)}` },
+          {
+            name: settings?.site_name || DEFAULT_SITE_NAME,
+            url: siteUrl.replace(/\/+$/, ""),
+          },
+          { name: post.title, url: postUrl(siteUrl, post.slug) },
         ]}
       />
       <CodeBlockEnhancer />
@@ -103,7 +133,7 @@ export default async function PostPage({ params }: PostPageProps) {
             {post.tags.map((tag) => (
               <Link
                 key={tag.id}
-                href={`/tags/${tag.slug}`}
+                href={tagPath(tag.slug)}
                 className="nav-link text-[12px] tracking-wide text-muted-foreground transition-editorial hover:text-foreground"
               >
                 {tag.name}
@@ -111,7 +141,6 @@ export default async function PostPage({ params }: PostPageProps) {
             ))}
           </div>
         )}
-
       </header>
 
       {post.cover_image_url && (
@@ -140,10 +169,15 @@ export default async function PostPage({ params }: PostPageProps) {
           href="/"
           className="nav-link inline-flex items-center gap-2 text-[13px] tracking-wide text-muted-foreground transition-editorial hover:text-foreground group"
         >
-          <span className="transition-transform duration-300 ease-out group-hover:-translate-x-1" aria-hidden="true">←</span>
+          <span
+            className="transition-transform duration-300 ease-out group-hover:-translate-x-1"
+            aria-hidden="true"
+          >
+            ←
+          </span>
           <span>返回</span>
         </Link>
       </footer>
     </article>
-  )
+  );
 }

@@ -1,51 +1,66 @@
-'use client'
+"use client";
 
-import { useEffect, useState, useTransition } from 'react'
-import { formatDate } from '@/lib/blog-utils'
-import { Button } from '@/components/ui/button'
-import { Textarea } from '@/components/ui/textarea'
-import { Input } from '@/components/ui/input'
-import { MessageSquare, Reply, ChevronDown, ChevronUp } from 'lucide-react'
+import { useEffect, useState, useTransition } from "react";
+import { formatDate } from "@/lib/blog-utils";
+import { readApiJson } from "@/lib/api-client";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { MessageSquare, Reply, ChevronDown, ChevronUp } from "lucide-react";
 
 interface Comment {
-  id: string
-  post_id: string
-  parent_id: string | null
-  author_name: string
-  content: string
-  created_at: string
-  children: Comment[]
+  id: string;
+  post_id: string;
+  parent_id: string | null;
+  author_name: string;
+  content: string;
+  created_at: string;
+  children: Comment[];
 }
 
 interface CommentSectionProps {
-  postId: string
+  postId: string;
 }
 
 export function CommentSection({ postId }: CommentSectionProps) {
-  const [comments, setComments] = useState<Comment[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [showForm, setShowForm] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    setLoading(true)
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (!cancelled) setLoading(true);
+    });
     fetch(`/api/comments?postId=${postId}`)
-      .then((res) => res.json())
+      .then((res) =>
+        readApiJson<{ comments: Comment[]; message?: string }>(res),
+      )
       .then((data) => {
-        if (data.message) setError(data.message)
-        else setComments(data.comments || [])
+        if (cancelled) return;
+        if (data.message) setError(data.message);
+        else setComments(data.comments || []);
       })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [postId])
+      .catch((err) => {
+        if (!cancelled) setError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
 
   if (error) {
     return (
       <section className="mt-16 pt-10 border-t border-border/40">
         <p className="text-sm text-muted-foreground">{error}</p>
       </section>
-    )
+    );
   }
 
   return (
@@ -71,8 +86,8 @@ export function CommentSection({ postId }: CommentSectionProps) {
         <CommentForm
           postId={postId}
           onSubmitted={() => {
-            setSubmitted(true)
-            setShowForm(false)
+            setSubmitted(true);
+            setShowForm(false);
           }}
           onCancel={() => setShowForm(false)}
         />
@@ -106,21 +121,35 @@ export function CommentSection({ postId }: CommentSectionProps) {
         </div>
       )}
     </section>
-  )
+  );
 }
 
-function CommentItem({ comment, postId, depth = 0 }: { comment: Comment; postId: string; depth?: number }) {
-  const [showReply, setShowReply] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
+function CommentItem({
+  comment,
+  postId,
+  depth = 0,
+}: {
+  comment: Comment;
+  postId: string;
+  depth?: number;
+}) {
+  const [showReply, setShowReply] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className={depth > 0 ? 'ml-6 pl-4 border-l-2 border-border/30' : ''}>
+    <div className={depth > 0 ? "ml-6 pl-4 border-l-2 border-border/30" : ""}>
       <div className="space-y-1.5">
         <div className="flex items-center gap-2 text-[12px]">
-          <span className="font-semibold text-foreground">{comment.author_name}</span>
-          <span className="text-muted-foreground">{formatDate(comment.created_at)}</span>
+          <span className="font-semibold text-foreground">
+            {comment.author_name}
+          </span>
+          <span className="text-muted-foreground">
+            {formatDate(comment.created_at)}
+          </span>
         </div>
-        <p className="text-[14px] text-muted-foreground leading-relaxed">{comment.content}</p>
+        <p className="text-[14px] text-muted-foreground leading-relaxed">
+          {comment.content}
+        </p>
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -136,7 +165,11 @@ function CommentItem({ comment, postId, depth = 0 }: { comment: Comment; postId:
               onClick={() => setCollapsed(!collapsed)}
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
             >
-              {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+              {collapsed ? (
+                <ChevronDown className="h-3 w-3" />
+              ) : (
+                <ChevronUp className="h-3 w-3" />
+              )}
               {comment.children.length} 条回复
             </button>
           )}
@@ -161,7 +194,7 @@ function CommentItem({ comment, postId, depth = 0 }: { comment: Comment; postId:
           </div>
         ))}
     </div>
-  )
+  );
 }
 
 function CommentForm({
@@ -170,47 +203,48 @@ function CommentForm({
   onSubmitted,
   onCancel,
 }: {
-  postId: string
-  parentId?: string
-  onSubmitted: () => void
-  onCancel: () => void
+  postId: string;
+  parentId?: string;
+  onSubmitted: () => void;
+  onCancel: () => void;
 }) {
-  const [isPending, startTransition] = useTransition()
-  const [name, setName] = useState('')
-  const [content, setContent] = useState('')
-  const [error, setError] = useState<string | null>(null)
+  const [isPending, startTransition] = useTransition();
+  const [name, setName] = useState("");
+  const [content, setContent] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!content.trim()) return
+    e.preventDefault();
+    if (!content.trim()) return;
 
-    setError(null)
+    setError(null);
     startTransition(async () => {
       try {
-        const res = await fetch('/api/comments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        const res = await fetch("/api/comments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             postId,
             parentId: parentId || null,
-            authorName: name.trim() || 'Anonymous',
+            authorName: name.trim() || "Anonymous",
             content: content.trim(),
           }),
-        })
-        const data = await res.json()
-        if (data.error) {
-          setError(data.error)
-        } else {
-          onSubmitted()
-        }
-      } catch {
-        setError('提交失败，请稍后重试')
+        });
+        await readApiJson<{ comment: Comment }>(res);
+        onSubmitted();
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "提交失败，请稍后重试",
+        );
       }
-    })
-  }
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 bg-muted/30 border border-border/40 rounded-lg p-4 animate-fade-in">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-3 bg-muted/30 border border-border/40 rounded-lg p-4 animate-fade-in"
+    >
       <Input
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -232,12 +266,12 @@ function CommentForm({
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex items-center gap-2">
         <Button type="submit" size="sm" disabled={isPending || !content.trim()}>
-          {isPending ? '提交中...' : parentId ? '回复' : '发表评论'}
+          {isPending ? "提交中..." : parentId ? "回复" : "发表评论"}
         </Button>
         <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
           取消
         </Button>
       </div>
     </form>
-  )
+  );
 }

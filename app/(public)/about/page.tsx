@@ -1,22 +1,26 @@
-import { getSiteSettings } from '@/lib/queries'
-import { markdownToHtml } from '@/lib/blog-utils'
-import type { Metadata } from 'next'
+import { getSiteSettings } from "@/lib/queries";
+import { markdownToHtml } from "@/lib/blog-utils";
+import type { Metadata } from "next";
 
-export const revalidate = 86400
+export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: '关于',
-}
+  title: "关于",
+};
 
 export default async function AboutPage() {
-  const settings = await getSiteSettings()
-  const aboutHtml = await markdownToHtml(settings?.about_content || '欢迎来到 QuietPress。')
+  const settings = await getSiteSettings();
+  const aboutHtml = await markdownToHtml(
+    settings?.about_content || "欢迎来到 QuietPress。",
+  );
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
-      <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground/85 mb-12 sm:mb-16 tracking-tight">关于</h1>
-      
-      <div 
+      <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground/85 mb-12 sm:mb-16 tracking-tight">
+        关于
+      </h1>
+
+      <div
         className="prose-editorial"
         dangerouslySetInnerHTML={{ __html: aboutHtml }}
       />
@@ -27,5 +31,5 @@ export default async function AboutPage() {
         </p>
       )}
     </div>
-  )
+  );
 }

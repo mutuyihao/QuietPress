@@ -1,18 +1,20 @@
-import Link from 'next/link'
-import { formatDate } from '@/lib/blog-utils'
-import { postPath } from '@/lib/route-segments'
-import type { PostWithTags } from '@/lib/types'
+import Link from "next/link";
+import { formatDate } from "@/lib/blog-utils";
+import { postPath } from "@/lib/route-segments";
+import type { PostWithTags } from "@/lib/types";
 
 interface RelatedPostsProps {
-  posts: PostWithTags[]
+  posts: PostWithTags[];
 }
 
 export function RelatedPosts({ posts }: RelatedPostsProps) {
-  if (posts.length === 0) return null
+  if (posts.length === 0) return null;
 
   return (
     <section className="mt-16 sm:mt-20 pt-10 border-t border-border/40">
-      <h2 className="font-serif text-lg font-semibold text-foreground mb-6">相关文章</h2>
+      <h2 className="font-serif text-lg font-semibold text-foreground mb-6">
+        相关文章
+      </h2>
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
           <Link
@@ -35,7 +37,7 @@ export function RelatedPosts({ posts }: RelatedPostsProps) {
               {post.tags.length > 0 && (
                 <>
                   <span>·</span>
-                  <span>{post.tags.map((t) => t.name).join(', ')}</span>
+                  <span>{post.tags.map((t) => t.name).join(", ")}</span>
                 </>
               )}
             </div>
@@ -43,5 +45,5 @@ export function RelatedPosts({ posts }: RelatedPostsProps) {
         ))}
       </div>
     </section>
-  )
+  );
 }
