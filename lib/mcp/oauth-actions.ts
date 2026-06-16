@@ -1,64 +1,73 @@
-'use server'
+"use server";
 
-import { redirect } from 'next/navigation'
-import { requireAdmin } from '@/lib/admin-auth'
-import { createAuthorizationCode, getMcpClientByClientId, getMcpEnabled, requestedScopesWithinClient } from '@/lib/mcp/store'
-import { assertMcpResource, isRegisteredRedirectUri } from '@/lib/mcp/oauth'
-import type { McpScope } from '@/lib/mcp/scopes'
-import { createServiceClient } from '@/lib/supabase/service'
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
+import {
+  createAuthorizationCode,
+  getMcpClientByClientId,
+  getMcpEnabled,
+  requestedScopesWithinClient,
+} from "@/lib/mcp/store";
+import { assertMcpResource, isRegisteredRedirectUri } from "@/lib/mcp/oauth";
+import type { McpScope } from "@/lib/mcp/scopes";
+import { createServiceClient } from "@/lib/supabase/service";
 
 function requireString(formData: FormData, key: string): string {
-  const value = String(formData.get(key) || '').trim()
-  if (!value) throw new Error(`${key} is required.`)
-  return value
+  const value = String(formData.get(key) || "").trim();
+  if (!value) throw new Error(`${key} is required.`);
+  return value;
 }
 
-function appendOAuthError(redirectUri: string, error: string, state: string): string {
-  const url = new URL(redirectUri)
-  url.searchParams.set('error', error)
-  if (state) url.searchParams.set('state', state)
-  return url.toString()
+function appendOAuthError(
+  redirectUri: string,
+  error: string,
+  state: string,
+): string {
+  const url = new URL(redirectUri);
+  url.searchParams.set("error", error);
+  if (state) url.searchParams.set("state", state);
+  return url.toString();
 }
 
 export async function approveMcpAuthorizationAction(formData: FormData) {
-  const { user } = await requireAdmin()
-  const service = createServiceClient()
+  const { user } = await requireAdmin();
+  const service = createServiceClient();
 
-  const enabled = await getMcpEnabled(service)
+  const enabled = await getMcpEnabled(service);
   if (!enabled) {
-    throw new Error('Remote MCP is disabled.')
+    throw new Error("Remote MCP is disabled.");
   }
 
-  const responseType = requireString(formData, 'response_type')
-  const clientId = requireString(formData, 'client_id')
-  const redirectUri = requireString(formData, 'redirect_uri')
-  const codeChallenge = requireString(formData, 'code_challenge')
-  const codeChallengeMethod = requireString(formData, 'code_challenge_method')
-  const scope = String(formData.get('scope') || '')
-  const state = String(formData.get('state') || '')
-  const resource = requireString(formData, 'resource')
+  const responseType = requireString(formData, "response_type");
+  const clientId = requireString(formData, "client_id");
+  const redirectUri = requireString(formData, "redirect_uri");
+  const codeChallenge = requireString(formData, "code_challenge");
+  const codeChallengeMethod = requireString(formData, "code_challenge_method");
+  const scope = String(formData.get("scope") || "");
+  const state = String(formData.get("state") || "");
+  const resource = requireString(formData, "resource");
 
-  if (responseType !== 'code') {
-    throw new Error('Only response_type=code is supported.')
+  if (responseType !== "code") {
+    throw new Error("Only response_type=code is supported.");
   }
-  if (codeChallengeMethod !== 'S256') {
-    throw new Error('Only PKCE S256 is supported.')
+  if (codeChallengeMethod !== "S256") {
+    throw new Error("Only PKCE S256 is supported.");
   }
-  assertMcpResource(new URL(resource).origin, resource)
+  assertMcpResource(new URL(resource).origin, resource);
 
-  const client = await getMcpClientByClientId(service, clientId)
+  const client = await getMcpClientByClientId(service, clientId);
   if (!client || !client.enabled) {
-    throw new Error('OAuth client is not available.')
+    throw new Error("OAuth client is not available.");
   }
   if (!isRegisteredRedirectUri(redirectUri, client.redirect_uris)) {
-    throw new Error('Redirect URI is not registered for this client.')
+    throw new Error("Redirect URI is not registered for this client.");
   }
 
-  let scopes: McpScope[]
+  let scopes: McpScope[];
   try {
-    scopes = requestedScopesWithinClient(scope, client)
+    scopes = requestedScopesWithinClient(scope, client);
   } catch {
-    redirect(appendOAuthError(redirectUri, 'invalid_scope', state))
+    redirect(appendOAuthError(redirectUri, "invalid_scope", state));
   }
 
   const code = await createAuthorizationCode(service, {
@@ -68,11 +77,11 @@ export async function approveMcpAuthorizationAction(formData: FormData) {
     codeChallenge,
     scopes,
     resource,
-  })
+  });
 
-  const url = new URL(redirectUri)
-  url.searchParams.set('code', code)
-  if (state) url.searchParams.set('state', state)
+  const url = new URL(redirectUri);
+  url.searchParams.set("code", code);
+  if (state) url.searchParams.set("state", state);
 
-  redirect(url.toString())
+  redirect(url.toString());
 }

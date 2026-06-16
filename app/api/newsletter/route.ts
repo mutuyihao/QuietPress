@@ -1,86 +1,110 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createPublicClient } from '@/lib/supabase/public'
-import { checkRateLimit, getClientIp } from '@/lib/rate-limit'
+import { NextRequest } from "next/server";
+import { createPublicClient } from "@/lib/supabase/public";
+import { checkRateLimitForRequest } from "@/lib/rate-limit";
+import {
+  apiError,
+  apiInternalError,
+  apiOk,
+  withApiRoute,
+} from "@/lib/api-response";
+import { validateSameOriginRequest } from "@/lib/csrf";
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const MAX_EMAIL_LENGTH = 320
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MAX_EMAIL_LENGTH = 320;
 
-export async function POST(request: NextRequest) {
-  try {
-    const rateLimit = checkRateLimit(getClientIp(request), {
-      scope: 'newsletter',
-      maxRequests: 3,
-      windowMs: 60 * 60_000,
-    })
+export const POST = withApiRoute(
+  "newsletter.POST",
+  async (request: NextRequest) => {
+    const csrfError = validateSameOriginRequest(request);
+    if (csrfError) return csrfError;
 
-    if (!rateLimit.allowed) {
-      return NextResponse.json(
-        { error: 'Too many subscription attempts. Please try again later.' },
-        { status: 429, headers: { 'Retry-After': String(rateLimit.retryAfter) } },
-      )
-    }
+    try {
+      const rateLimit = await checkRateLimitForRequest(request, {
+        scope: "newsletter",
+        maxRequests: 3,
+        windowMs: 60 * 60_000,
+      });
 
-    const { email } = await request.json()
-    const normalizedEmail = typeof email === 'string' ? email.toLowerCase().trim() : ''
-
-    if (
-      !normalizedEmail
-      || normalizedEmail.length > MAX_EMAIL_LENGTH
-      || !EMAIL_PATTERN.test(normalizedEmail)
-    ) {
-      return NextResponse.json({ error: 'Please provide a valid email address' }, { status: 400 })
-    }
-
-    const supabase = createPublicClient()
-
-    const { data: existing, error: lookupError } = await supabase
-      .from('newsletter_subscribers')
-      .select('id, status')
-      .eq('email', normalizedEmail)
-      .maybeSingle()
-
-    if (lookupError && !lookupError.message.includes('newsletter_subscribers')) {
-      return NextResponse.json({ error: 'Subscription lookup failed' }, { status: 500 })
-    }
-
-    if (existing) {
-      if (existing.status === 'active') {
-        return NextResponse.json({ success: true, message: 'Already subscribed' })
+      if (!rateLimit.allowed) {
+        return apiError(
+          "RATE_LIMITED",
+          "Too many subscription attempts. Please try again later.",
+          429,
+          {
+            headers: { "Retry-After": String(rateLimit.retryAfter) },
+          },
+        );
       }
-      if (existing.status === 'unsubscribed') {
-        const { error: resubError } = await supabase
-          .from('newsletter_subscribers')
-          .update({ status: 'active', updated_at: new Date().toISOString() })
-          .eq('id', existing.id)
-        if (resubError) {
-          return NextResponse.json({ error: 'Subscription update failed' }, { status: 500 })
+
+      const { email } = await request.json();
+      const normalizedEmail =
+        typeof email === "string" ? email.toLowerCase().trim() : "";
+
+      if (
+        !normalizedEmail ||
+        normalizedEmail.length > MAX_EMAIL_LENGTH ||
+        !EMAIL_PATTERN.test(normalizedEmail)
+      ) {
+        return apiError(
+          "INVALID_EMAIL",
+          "Please provide a valid email address",
+          400,
+        );
+      }
+
+      const supabase = createPublicClient();
+
+      const { data: existing, error: lookupError } = await supabase
+        .from("newsletter_subscribers")
+        .select("id, status")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
+
+      if (
+        lookupError &&
+        !lookupError.message.includes("newsletter_subscribers")
+      ) {
+        return apiInternalError("SUBSCRIPTION_LOOKUP_FAILED", lookupError);
+      }
+
+      if (existing) {
+        if (existing.status === "active") {
+          return apiOk({ message: "Already subscribed" });
         }
-        return NextResponse.json({ success: true, message: 'Resubscribed' })
+        if (existing.status === "unsubscribed") {
+          const { error: resubError } = await supabase
+            .from("newsletter_subscribers")
+            .update({ status: "active", updated_at: new Date().toISOString() })
+            .eq("id", existing.id);
+          if (resubError) {
+            return apiInternalError("SUBSCRIPTION_UPDATE_FAILED", resubError);
+          }
+          return apiOk({ message: "Resubscribed" });
+        }
       }
-    }
 
-    const { error } = await supabase
-      .from('newsletter_subscribers')
-      .insert({
+      const { error } = await supabase.from("newsletter_subscribers").insert({
         email: normalizedEmail,
-        status: 'active',
-      })
+        status: "active",
+      });
 
-    if (error) {
-      if (error.message.includes('newsletter_subscribers')) {
-        return NextResponse.json(
-          { error: 'Initial database migration has not been applied.' },
-          { status: 503 },
-        )
+      if (error) {
+        if (error.message.includes("newsletter_subscribers")) {
+          return apiError(
+            "MIGRATION_REQUIRED",
+            "Initial database migration has not been applied.",
+            503,
+          );
+        }
+        if (error.code === "23505") {
+          return apiOk({ message: "Already subscribed" });
+        }
+        return apiInternalError("SUBSCRIPTION_FAILED", error);
       }
-      if (error.code === '23505') {
-        return NextResponse.json({ success: true, message: 'Already subscribed' })
-      }
-      return NextResponse.json({ error: 'Subscription failed' }, { status: 500 })
+
+      return apiOk({ message: "Subscribed" });
+    } catch (err) {
+      return apiInternalError("SUBSCRIPTION_FAILED", err);
     }
-
-    return NextResponse.json({ success: true, message: 'Subscribed' })
-  } catch {
-    return NextResponse.json({ error: 'Subscription failed' }, { status: 500 })
-  }
-}
+  },
+);

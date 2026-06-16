@@ -1,23 +1,26 @@
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { LoginRedirectCountdown } from '@/components/login-redirect-countdown'
-import { getAdminSession } from '@/lib/admin-auth'
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { LoginRedirectCountdown } from "@/components/login-redirect-countdown";
+import { getAdminSession } from "@/lib/admin-auth";
+
+export const dynamic = "force-dynamic";
 
 interface LoginPageProps {
-  searchParams?: Promise<{ error?: string; login?: string; next?: string }>
+  searchParams?: Promise<{ error?: string; login?: string; next?: string }>;
 }
 
 function safeNextPath(value: string | undefined): string {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return ''
-  return value
+  if (!value || !value.startsWith("/") || value.startsWith("//")) return "";
+  return value;
 }
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = await searchParams
-  const error = params?.error
-  const next = safeNextPath(params?.next)
-  const showLoginSuccess = params?.login === 'success' && await getAdminSession()
+  const params = await searchParams;
+  const error = params?.error;
+  const next = safeNextPath(params?.next);
+  const showLoginSuccess =
+    params?.login === "success" && (await getAdminSession());
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -71,5 +74,5 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         )}
       </div>
     </div>
-  )
+  );
 }

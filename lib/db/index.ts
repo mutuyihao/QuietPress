@@ -5,11 +5,11 @@ export type {
   Repositories,
   CreatePostInput,
   UpdatePostInput,
-} from './types'
+} from "./types";
 
 export {
   createRepositories,
   SupabasePostRepository,
   SupabaseTagRepository,
   SupabaseSettingsRepository,
-} from './supabase'
+} from "./supabase";

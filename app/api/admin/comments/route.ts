@@ -1,87 +1,130 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { getAdminSession } from '@/lib/admin-auth'
-import { getErrorMessage } from '@/lib/utils'
+import { NextRequest } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getAdminSession } from "@/lib/admin-auth";
+import {
+  apiError,
+  apiInternalError,
+  apiOk,
+  withApiRoute,
+} from "@/lib/api-response";
+import { validateSameOriginRequest } from "@/lib/csrf";
+import { logAdminAction } from "@/lib/audit-log";
 
-export async function GET(request: NextRequest) {
-  const session = await getAdminSession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+function isMissingCommentsTable(error: { code?: string }): boolean {
+  return error.code === "42P01";
+}
 
-  const { searchParams } = request.nextUrl
-  const status = searchParams.get('status') || 'pending'
+export const GET = withApiRoute(
+  "admin.comments.GET",
+  async (request: NextRequest) => {
+    const session = await getAdminSession();
+    if (!session) {
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
+    }
 
-  try {
-    const supabase = await createClient()
+    const { searchParams } = request.nextUrl;
+    const status = searchParams.get("status") || "pending";
 
-    const { data: comments, error } = await supabase
-      .from('comments')
-      .select('*, posts!inner(title, slug)')
-      .eq('status', status)
-      .order('created_at', { ascending: false })
-      .limit(100)
+    try {
+      const supabase = await createClient();
 
-    if (error) {
-      if (error.message.includes('comments')) {
-        return NextResponse.json({ comments: [], message: 'Initial database migration has not been applied.' })
+      const { data: comments, error } = await supabase
+        .from("comments")
+        .select("*, posts!inner(title, slug)")
+        .eq("status", status)
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) {
+        if (isMissingCommentsTable(error)) {
+          return apiOk({
+            comments: [],
+            message: "Initial database migration has not been applied.",
+          });
+        }
+        return apiInternalError("COMMENTS_LOAD_FAILED", error);
       }
-      return NextResponse.json({ error: error.message }, { status: 500 })
+
+      return apiOk({ comments: comments || [] });
+    } catch (err: unknown) {
+      return apiInternalError("COMMENTS_LOAD_FAILED", err);
+    }
+  },
+);
+
+export const PATCH = withApiRoute(
+  "admin.comments.PATCH",
+  async (request: NextRequest) => {
+    const csrfError = validateSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
+    const session = await getAdminSession();
+    if (!session) {
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
-    return NextResponse.json({ comments: comments || [] })
-  } catch (err: unknown) {
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 })
-  }
-}
+    try {
+      const { id, status } = await request.json();
+      if (!id || !["approved", "spam"].includes(status)) {
+        return apiError("INVALID_PARAMS", "Invalid params", 400);
+      }
 
-export async function PATCH(request: NextRequest) {
-  const session = await getAdminSession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+      const supabase = await createClient();
+      const { error } = await supabase
+        .from("comments")
+        .update({ status })
+        .eq("id", id);
 
-  try {
-    const { id, status } = await request.json()
-    if (!id || !['approved', 'spam'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid params' }, { status: 400 })
+      if (error) return apiInternalError("COMMENT_UPDATE_FAILED", error);
+
+      await logAdminAction(supabase, {
+        action: "comment.update_status",
+        entityType: "comment",
+        entityId: id,
+        metadata: { status },
+        request,
+        userId: session.user.id,
+      });
+
+      return apiOk({ updated: true });
+    } catch (err: unknown) {
+      return apiInternalError("COMMENT_UPDATE_FAILED", err);
+    }
+  },
+);
+
+export const DELETE = withApiRoute(
+  "admin.comments.DELETE",
+  async (request: NextRequest) => {
+    const csrfError = validateSameOriginRequest(request);
+    if (csrfError) return csrfError;
+
+    const session = await getAdminSession();
+    if (!session) {
+      return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('comments')
-      .update({ status })
-      .eq('id', id)
+    try {
+      const { searchParams } = request.nextUrl;
+      const id = searchParams.get("id");
+      if (!id) return apiError("ID_REQUIRED", "id required", 400);
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      const supabase = await createClient();
+      const { error } = await supabase.from("comments").delete().eq("id", id);
 
-    return NextResponse.json({ success: true })
-  } catch (err: unknown) {
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 })
-  }
-}
+      if (error) return apiInternalError("COMMENT_DELETE_FAILED", error);
 
-export async function DELETE(request: NextRequest) {
-  const session = await getAdminSession()
-  if (!session) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+      await logAdminAction(supabase, {
+        action: "comment.delete",
+        entityType: "comment",
+        entityId: id,
+        request,
+        userId: session.user.id,
+      });
 
-  try {
-    const { searchParams } = request.nextUrl
-    const id = searchParams.get('id')
-    if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
-
-    const supabase = await createClient()
-    const { error } = await supabase
-      .from('comments')
-      .delete()
-      .eq('id', id)
-
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-
-    return NextResponse.json({ success: true })
-  } catch (err: unknown) {
-    return NextResponse.json({ error: getErrorMessage(err) }, { status: 500 })
-  }
-}
+      return apiOk({ deleted: true });
+    } catch (err: unknown) {
+      return apiInternalError("COMMENT_DELETE_FAILED", err);
+    }
+  },
+);
