@@ -48,7 +48,9 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_LOCALE=zh-CN
 ADMIN_EMAIL=admin@example.com
+IP_HASH_SECRET=generate-with-openssl-rand-hex-32
 ```
 
 `NEXT_PUBLIC_SUPABASE_ANON_KEY` 可用 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` 替代；`SUPABASE_SERVICE_ROLE_KEY` 可用 `SUPABASE_SECRET_KEY` 替代。QuietPress 同时兼容新旧 Supabase key 命名。
@@ -56,6 +58,9 @@ ADMIN_EMAIL=admin@example.com
 可选配置：
 
 - `STORAGE_PROVIDER`: `supabase`, `s3`, `r2`，默认 `supabase`。
+- `NEXT_PUBLIC_LOCALE`: 页面 lang、RSS language 和日期格式，默认 `zh-CN`。
+- `IP_HASH_SECRET`: 评论 IP、限流指纹和审计 IP/UA 的哈希盐，生产必填，建议用 `openssl rand -hex 32` 生成。
+- `TRUSTED_PROXY_HOPS`: 从 `X-Forwarded-For` 右侧计算可信客户端 IP 的代理跳数，默认 `1`。
 - `DEFAULT_SUPABASE_STORAGE_QUOTA_MB`: Supabase 存储配额展示值，默认 `1024`。
 - `S3_ENDPOINT`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_BUCKET`, `S3_PUBLIC_URL_BASE`: S3/R2 上传必需。
 - `S3_REGION`: 可选，默认 `auto`。
@@ -69,7 +74,9 @@ ADMIN_EMAIL=admin@example.com
 
 ```powershell
 pnpm dev
+pnpm format:check
 pnpm lint
+pnpm typecheck
 pnpm build
 pnpm start
 ```

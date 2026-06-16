@@ -42,16 +42,19 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_LOCALE=zh-CN
 ADMIN_EMAIL=admin@example.com
 ```
 
 `NEXT_PUBLIC_SITE_URL` 用于 RSS、Sitemap、JSON-LD、canonical URL 等绝对链接生成。本地默认可以使用 `http://localhost:3000`，生产环境应改成正式域名。
+`NEXT_PUBLIC_LOCALE` 用于页面 lang、RSS language 和日期格式；默认 `zh-CN`。
 
 QuietPress 同时兼容 Supabase 新旧 key 命名：
 
 - 浏览器公开 key：`NEXT_PUBLIC_SUPABASE_ANON_KEY` 或 `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`。
 - 服务端 secret key：`SUPABASE_SERVICE_ROLE_KEY` 或 `SUPABASE_SECRET_KEY`。AI/MCP、OAuth、DCR、审计和 Vercel bootstrap 都需要它。
 - Vercel bootstrap 数据库连接：`POSTGRES_URL_NON_POOLING`。通常由 Vercel Supabase Marketplace 自动注入。
+- 隐私哈希盐：生产建议设置 `IP_HASH_SECRET`，用于评论 IP、限流指纹和审计 IP/UA 哈希。修改该值会让历史哈希和限流桶无法再与新请求匹配。
 
 ## 存储配置
 

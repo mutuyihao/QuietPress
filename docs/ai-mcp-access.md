@@ -48,19 +48,19 @@ POST /oauth/revoke
 
 ## 权限 Scopes
 
-| Scope | 能力 |
-| --- | --- |
-| `posts:read` | 搜索和读取文章 |
-| `posts:write` | 创建草稿、更新文章 |
-| `posts:publish` | 发布和下线文章 |
-| `posts:delete` | 删除文章 |
-| `tags:write` | 管理标签 |
-| `media:write` | 从 URL 上传图片 |
-| `comments:moderate` | 审核评论 |
-| `settings:write` | 更新公开站点设置 |
-| `migration:read` | 导出迁移包 |
-| `migration:write` | 预检和执行迁移导入 |
-| `analytics:read` | 读取统计摘要 |
+| Scope               | 能力               |
+| ------------------- | ------------------ |
+| `posts:read`        | 搜索和读取文章     |
+| `posts:write`       | 创建草稿、更新文章 |
+| `posts:publish`     | 发布和下线文章     |
+| `posts:delete`      | 删除文章           |
+| `tags:write`        | 管理标签           |
+| `media:write`       | 从 URL 上传图片    |
+| `comments:moderate` | 审核评论           |
+| `settings:write`    | 更新公开站点设置   |
+| `migration:read`    | 导出迁移包         |
+| `migration:write`   | 预检和执行迁移导入 |
+| `analytics:read`    | 读取统计摘要       |
 
 发布、删除、设置修改和迁移导入等高风险工具要求 `confirm: true` 和 `idempotency_key`。
 

@@ -6,7 +6,9 @@
 
 - [ ] `.env` 和 `.env.local` 不会提交。
 - [ ] `.env.example` 覆盖所有需要公开说明的变量。
+- [ ] `pnpm format:check` 通过。
 - [ ] `pnpm lint` 通过。
+- [ ] `pnpm typecheck` 通过。
 - [ ] `pnpm build` 通过。
 - [ ] `/api/health` 在目标环境返回 `healthy`。
 - [ ] Vercel 一键部署 bootstrap 成功，或手动 Supabase migration 已执行。
@@ -31,7 +33,9 @@
 当前 workflow 位于 `.github/workflows/ci.yml`：
 
 - `pnpm install --frozen-lockfile`
+- `pnpm format:check`
 - `pnpm lint`
+- `pnpm typecheck`
 - `pnpm build`
 
 CI 使用占位 Supabase 环境变量。如果后续构建阶段需要真实 Supabase 数据，请在 GitHub Actions repository secrets 中配置真实值，并在 workflow 中引用。
@@ -43,6 +47,8 @@ CI 使用占位 Supabase 环境变量。如果后续构建阶段需要真实 Sup
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_LOCALE=
+IP_HASH_SECRET=
 ```
 
 Supabase public key 二选一：
