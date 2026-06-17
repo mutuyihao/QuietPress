@@ -454,11 +454,30 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   margin: 2em 0;
   font-size: 0.875rem;
   line-height: 1.7;
+  position: relative;
 }
 .prose-editorial pre code {
   background: none;
   padding: 0;
   border-radius: 0;
+}
+.prose-editorial pre.shiki {
+  background: var(--muted) !important;
+  color: var(--foreground);
+}
+.dark .prose-editorial pre.shiki {
+  background: color-mix(in oklch, var(--muted) 70%, transparent) !important;
+  color: var(--shiki-dark, var(--foreground)) !important;
+}
+.dark .prose-editorial pre.shiki span {
+  color: var(--shiki-dark, inherit) !important;
+}
+.prose-editorial pre.shiki code {
+  display: block;
+}
+.prose-editorial pre.shiki .line {
+  display: block;
+  min-height: 1.7em;
 }
 
 .prose-editorial img {
@@ -673,111 +692,4 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   transition:
     color 0.3s ease,
     opacity 0.3s ease;
-}
-
-/* ── Prism Syntax Highlighting Styles ── */
-.prose-editorial .token.comment,
-.prose-editorial .token.prolog,
-.prose-editorial .token.doctype,
-.prose-editorial .token.cdata {
-  @apply text-muted-foreground/50;
-}
-
-.prose-editorial .token.punctuation {
-  @apply text-foreground/75;
-}
-
-.prose-editorial .token.property,
-.prose-editorial .token.tag,
-.prose-editorial .token.boolean,
-.prose-editorial .token.number,
-.prose-editorial .token.constant,
-.prose-editorial .token.symbol,
-.prose-editorial .token.deleted {
-  color: oklch(0.6 0.16 45); /* Elegant warm terracotta */
-}
-
-.prose-editorial .token.selector,
-.prose-editorial .token.attr-name,
-.prose-editorial .token.string,
-.prose-editorial .token.char,
-.prose-editorial .token.builtin,
-.prose-editorial .token.inserted {
-  color: oklch(0.55 0.15 145); /* Elegant muted forest green */
-}
-
-.prose-editorial .token.operator,
-.prose-editorial .token.entity,
-.prose-editorial .token.url,
-.language-css .token.string,
-.style .token.string {
-  color: oklch(0.58 0.14 240); /* Soft steel blue */
-}
-
-.prose-editorial .token.atrule,
-.prose-editorial .token.attr-value,
-.prose-editorial .token.keyword {
-  color: oklch(0.52 0.2 300); /* Regal editorial purple */
-}
-
-.prose-editorial .token.function,
-.prose-editorial .token.class-name {
-  color: oklch(0.55 0.16 260); /* Editorial sky blue */
-}
-
-.prose-editorial .token.regex,
-.prose-editorial .token.important,
-.prose-editorial .token.variable {
-  color: oklch(0.64 0.16 75); /* Soft amber */
-}
-
-.prose-editorial .token.important,
-.prose-editorial .token.bold {
-  @apply font-semibold;
-}
-
-.prose-editorial .token.italic {
-  @apply italic;
-}
-
-/* Dark mode token refinements */
-.dark .prose-editorial .token.property,
-.dark .prose-editorial .token.tag,
-.dark .prose-editorial .token.boolean,
-.dark .prose-editorial .token.number,
-.dark .prose-editorial .token.constant,
-.dark .prose-editorial .token.symbol,
-.dark .prose-editorial .token.deleted {
-  color: oklch(0.78 0.12 45);
-}
-
-.dark .prose-editorial .token.selector,
-.dark .prose-editorial .token.attr-name,
-.dark .prose-editorial .token.string,
-.dark .prose-editorial .token.char,
-.dark .prose-editorial .token.inserted {
-  color: oklch(0.76 0.1 145);
-}
-
-.dark .prose-editorial .token.operator,
-.dark .prose-editorial .token.entity,
-.dark .prose-editorial .token.url {
-  color: oklch(0.76 0.1 240);
-}
-
-.dark .prose-editorial .token.atrule,
-.dark .prose-editorial .token.attr-value,
-.dark .prose-editorial .token.keyword {
-  color: oklch(0.74 0.12 300);
-}
-
-.dark .prose-editorial .token.function,
-.dark .prose-editorial .token.class-name {
-  color: oklch(0.74 0.12 260);
-}
-
-.dark .prose-editorial .token.regex,
-.dark .prose-editorial .token.important,
-.dark .prose-editorial .token.variable {
-  color: oklch(0.8 0.12 75);
 }

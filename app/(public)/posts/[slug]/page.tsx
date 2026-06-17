@@ -7,7 +7,7 @@ import {
   getSiteSettings,
 } from "@/lib/queries";
 import {
-  markdownToHtml,
+  renderMarkdown,
   formatDate,
   calculateReadingTime,
 } from "@/lib/blog-utils";
@@ -85,7 +85,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const settings = await getSiteSettings();
   const commentsEnabled = settings?.comments_enabled ?? true;
-  const contentHtml = await markdownToHtml(post.content_markdown);
+  const renderedContent = await renderMarkdown(post.content_markdown);
   const siteUrl =
     settings?.base_url ||
     process.env.NEXT_PUBLIC_SITE_URL ||
@@ -108,7 +108,7 @@ export default async function PostPage({ params }: PostPageProps) {
       />
       <CodeBlockEnhancer />
       <ViewCounter postId={post.id} />
-      <TOC />
+      <TOC headings={renderedContent.headings} />
       <header className="mb-12 sm:mb-16">
         <div className="flex items-center gap-2 text-[13px] tracking-wide text-muted-foreground tabular-nums">
           <time dateTime={post.published_at || post.created_at}>
@@ -158,7 +158,7 @@ export default async function PostPage({ params }: PostPageProps) {
 
       <div
         className="prose-editorial"
-        dangerouslySetInnerHTML={{ __html: contentHtml }}
+        dangerouslySetInnerHTML={{ __html: renderedContent.html }}
       />
 
       <RelatedPosts posts={relatedPosts} />
