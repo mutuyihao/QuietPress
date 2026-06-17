@@ -7,6 +7,7 @@ import {
 } from "@/lib/site-defaults";
 import { postUrl } from "@/lib/route-segments";
 import { withApiRoute } from "@/lib/api-response";
+import { escapeXml } from "@/lib/rss";
 
 export const GET = withApiRoute("rss.GET", async () => {
   const [result, settings] = await Promise.all([
@@ -53,12 +54,3 @@ export const GET = withApiRoute("rss.GET", async () => {
     },
   });
 });
-
-function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
-}

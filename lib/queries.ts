@@ -3,7 +3,13 @@ import { unstable_cache } from "next/cache";
 import { createPublicClient } from "@/lib/supabase/public";
 import { createRepositories } from "@/lib/db";
 import { getPostCacheTag } from "@/lib/blog/cache-tags";
-import type { PostWithTags, Tag, SiteSettings } from "@/lib/types";
+import type {
+  ArchivePost,
+  PostWithTags,
+  Tag,
+  TagWithPostCount,
+  SiteSettings,
+} from "@/lib/types";
 import type { PaginatedResult } from "@/lib/db/types";
 
 const POSTS_REVALIDATE_SECONDS = 300;
@@ -44,6 +50,20 @@ const getPublishedPostSlugsCached = unstable_cache(
 );
 
 export const getPublishedPostSlugs = cache(() => getPublishedPostSlugsCached());
+
+const getArchivePostsCached = unstable_cache(
+  async (): Promise<ArchivePost[]> => {
+    const { posts } = await getPublicRepos();
+    return posts.listArchive();
+  },
+  ["archive-posts"],
+  {
+    tags: ["posts"],
+    revalidate: POSTS_REVALIDATE_SECONDS,
+  },
+);
+
+export const getArchivePosts = cache(() => getArchivePostsCached());
 
 export const getPostBySlug = cache((slug: string) =>
   unstable_cache(
@@ -88,6 +108,20 @@ const getAllTagsCached = unstable_cache(
 );
 
 export const getAllTags = cache(() => getAllTagsCached());
+
+const getTagsWithPostCountsCached = unstable_cache(
+  async (): Promise<TagWithPostCount[]> => {
+    const { tags } = await getPublicRepos();
+    return tags.listWithPostCounts();
+  },
+  ["tags-with-post-counts"],
+  {
+    tags: ["posts", "tags"],
+    revalidate: POSTS_REVALIDATE_SECONDS,
+  },
+);
+
+export const getTagsWithPostCounts = cache(() => getTagsWithPostCountsCached());
 
 const getTagBySlugCached = unstable_cache(
   async (slug: string): Promise<Tag | null> => {

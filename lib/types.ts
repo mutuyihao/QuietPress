@@ -27,6 +27,18 @@ export interface Tag {
   created_at: string;
 }
 
+export interface TagWithPostCount extends Tag {
+  post_count: number;
+}
+
+export interface ArchivePost {
+  id: string;
+  title: string;
+  slug: string;
+  published_at: string | null;
+  created_at: string;
+}
+
 export interface PostWithTags extends Post {
   tags: Tag[];
 }

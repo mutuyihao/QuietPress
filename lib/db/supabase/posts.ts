@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PostStatus, PostWithTags, Tag } from "@/lib/types";
+import type { ArchivePost, PostStatus, PostWithTags, Tag } from "@/lib/types";
 import type {
   PostRepository,
   CreatePostInput,
@@ -11,6 +11,7 @@ import { slugify } from "@/lib/blog-utils";
 import { logger } from "@/lib/logger";
 
 export const POST_WITH_TAGS_SELECT = "*, post_tags(tags(*))";
+const PUBLIC_ARCHIVE_PAGE_SIZE = 1000;
 
 type PostRow = Omit<PostWithTags, "tags">;
 
@@ -46,6 +47,19 @@ function getPostSlugVariants(slug: string): string[] {
   const routeVariants = getRouteSegmentVariants(slug);
   const legacySlugVariants = routeVariants.map((variant) => slugify(variant));
   return Array.from(new Set([...routeVariants, ...legacySlugVariants]));
+}
+
+function isArchivePost(value: unknown): value is ArchivePost {
+  if (!value || typeof value !== "object") return false;
+
+  const row = value as Partial<ArchivePost>;
+  return (
+    typeof row.id === "string" &&
+    typeof row.title === "string" &&
+    typeof row.slug === "string" &&
+    (typeof row.published_at === "string" || row.published_at === null) &&
+    typeof row.created_at === "string"
+  );
 }
 
 function escapeIlikePattern(value: string): string {
@@ -158,6 +172,29 @@ export class SupabasePostRepository implements PostRepository {
 
     if (error || !posts) return [];
     return posts.map((post) => mapNestedPost(post));
+  }
+
+  async listArchive(): Promise<ArchivePost[]> {
+    const now = new Date().toISOString();
+    const archivePosts: ArchivePost[] = [];
+
+    for (let from = 0; ; from += PUBLIC_ARCHIVE_PAGE_SIZE) {
+      const to = from + PUBLIC_ARCHIVE_PAGE_SIZE - 1;
+      const { data: posts, error } = await this.supabase
+        .from("posts")
+        .select("id, title, slug, published_at, created_at")
+        .eq("status", "published")
+        .lte("published_at", now)
+        .order("published_at", { ascending: false })
+        .range(from, to);
+
+      if (error || !posts) return [];
+
+      archivePosts.push(...posts.filter(isArchivePost));
+      if (posts.length < PUBLIC_ARCHIVE_PAGE_SIZE) break;
+    }
+
+    return archivePosts;
   }
 
   async listPublishedSlugs(): Promise<string[]> {

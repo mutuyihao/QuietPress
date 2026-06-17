@@ -18,6 +18,12 @@ interface HeaderProps {
   siteName: string;
 }
 
+const NAV_ITEMS = [
+  { href: "/about", label: "关于" },
+  { href: "/tags", label: "标签" },
+  { href: "/archive", label: "归档" },
+];
+
 export function Header({ siteName }: HeaderProps) {
   const [open, setOpen] = useState(false);
 
@@ -33,18 +39,15 @@ export function Header({ siteName }: HeaderProps) {
           </Link>
 
           <div className="hidden sm:flex items-center gap-4 sm:gap-6">
-            <Link
-              href="/about"
-              className="nav-link text-[13px] tracking-wide uppercase text-muted-foreground transition-editorial hover:text-foreground"
-            >
-              关于
-            </Link>
-            <Link
-              href="/tags"
-              className="nav-link text-[13px] tracking-wide uppercase text-muted-foreground transition-editorial hover:text-foreground"
-            >
-              标签
-            </Link>
+            {NAV_ITEMS.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="nav-link text-[13px] tracking-wide uppercase text-muted-foreground transition-editorial hover:text-foreground"
+              >
+                {item.label}
+              </Link>
+            ))}
             <Search />
             <ThemeToggle />
           </div>
@@ -76,20 +79,16 @@ export function Header({ siteName }: HeaderProps) {
                   >
                     首页
                   </Link>
-                  <Link
-                    href="/about"
-                    onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    关于
-                  </Link>
-                  <Link
-                    href="/tags"
-                    onClick={() => setOpen(false)}
-                    className="rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                  >
-                    标签
-                  </Link>
+                  {NAV_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className="rounded-md px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                    >
+                      {item.label}
+                    </Link>
+                  ))}
                 </nav>
               </SheetContent>
             </Sheet>

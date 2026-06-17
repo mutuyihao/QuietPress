@@ -5,6 +5,7 @@ export type {
   Repositories,
   CreatePostInput,
   UpdatePostInput,
+  PaginatedResult,
 } from "./types";
 
 export {

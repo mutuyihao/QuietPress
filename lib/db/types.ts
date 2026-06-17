@@ -1,4 +1,11 @@
-import type { PostWithTags, Tag, SiteSettings, PostStatus } from "@/lib/types";
+import type {
+  ArchivePost,
+  PostWithTags,
+  Tag,
+  TagWithPostCount,
+  SiteSettings,
+  PostStatus,
+} from "@/lib/types";
 
 export interface CreatePostInput {
   title: string;
@@ -52,6 +59,7 @@ export interface PostRepository {
     pageSize?: number,
   ): Promise<PaginatedResult<PostWithTags>>;
   listAll(): Promise<PostWithTags[]>;
+  listArchive(): Promise<ArchivePost[]>;
   listPublishedSlugs(): Promise<string[]>;
   findSlugsByPrefix(prefix: string, excludingId?: string): Promise<string[]>;
   getBySlug(slug: string): Promise<PostWithTags | null>;
@@ -85,6 +93,7 @@ export interface PostRepository {
 
 export interface TagRepository {
   list(): Promise<Tag[]>;
+  listWithPostCounts(): Promise<TagWithPostCount[]>;
   getBySlug(slug: string): Promise<Tag | null>;
   create(name: string, slug: string): Promise<Tag>;
   update(id: string, name: string, slug: string): Promise<Tag>;

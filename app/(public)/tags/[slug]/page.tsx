@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getAllTags, getPostsByTag, getTagBySlug } from "@/lib/queries";
 import { PostCard } from "@/components/post-card";
+import { tagPath } from "@/lib/route-segments";
 import type { Metadata } from "next";
 
 export const revalidate = 3600;
@@ -26,7 +27,12 @@ export async function generateMetadata({
 
   return {
     title: `${tag.name}`,
-    description: `查看所有带有 ${tag.name} 标签的文章`,
+    description: `查看所有带有 ${tag.name} 标签的文章。`,
+    alternates: {
+      types: {
+        "application/rss+xml": `${tagPath(tag.slug)}/rss.xml`,
+      },
+    },
   };
 }
 
@@ -39,6 +45,7 @@ export default async function TagPage({ params }: TagPageProps) {
   }
 
   const posts = await getPostsByTag(slug);
+  const rssPath = `${tagPath(tag.slug)}/rss.xml`;
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
@@ -46,13 +53,28 @@ export default async function TagPage({ params }: TagPageProps) {
         <p className="text-[13px] tracking-wide text-muted-foreground mb-3">
           标签
         </p>
-        <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground tracking-tight">
-          {tag.name}
-        </h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground tracking-tight">
+              {tag.name}
+            </h1>
+            <p className="mt-3 text-[14px] text-muted-foreground">
+              共 {posts.length} 篇已发布文章
+            </p>
+          </div>
+          <Link
+            href={rssPath}
+            className="nav-link text-[12px] tracking-wide text-muted-foreground transition-editorial hover:text-foreground"
+          >
+            RSS
+          </Link>
+        </div>
       </header>
 
       {posts.length === 0 ? (
-        <p className="text-muted-foreground text-[15px]">该标签下暂无文章。</p>
+        <div className="rounded-xl border border-dashed border-border/70 px-5 py-10 text-center text-[15px] text-muted-foreground">
+          该标签下暂无已发布文章。
+        </div>
       ) : (
         <div className="space-y-14 sm:space-y-16">
           {posts.map((post, index) => (
