@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { Header } from "@/components/header";
 import { getSiteSettings } from "@/lib/queries";
 import { DEFAULT_SITE_NAME } from "@/lib/site-defaults";
 
@@ -16,17 +16,17 @@ export default async function RootNotFound() {
           404 Error
         </span>
         <h1 className="mt-4 font-serif text-[1.75rem] sm:text-[2rem] font-bold text-foreground leading-tight tracking-tight">
-          此页面已在虚无中归档
+          页面没有找到
         </h1>
         <p className="mt-4 text-sm text-muted-foreground/80 max-w-[360px] leading-relaxed">
-          您所寻找的文字或许已随风消逝，或者被移到了别处。
+          这篇内容可能已经移动或不存在。你可以从首页、标签或归档继续浏览。
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Link
             href="/"
             className="inline-flex items-center gap-1 text-[13px] tracking-wide text-foreground border-b border-foreground/30 hover:border-foreground pb-0.5 transition-all duration-300"
           >
-            返回首页搜索 &rarr;
+            返回首页 &rarr;
           </Link>
           <Link
             href="/tags"
@@ -35,10 +35,10 @@ export default async function RootNotFound() {
             浏览标签
           </Link>
           <Link
-            href="/about"
+            href="/archive"
             className="inline-flex items-center gap-1 text-[13px] tracking-wide text-muted-foreground border-b border-transparent hover:border-muted-foreground/50 hover:text-foreground pb-0.5 transition-all duration-300"
           >
-            查看关于
+            查看归档
           </Link>
         </div>
       </main>
@@ -46,6 +46,7 @@ export default async function RootNotFound() {
     </>
   );
 }
+
 export const metadata = {
   title: "页面未找到",
 };
