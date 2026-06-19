@@ -15,7 +15,7 @@ function sha256(value: string): Buffer {
   return createHash("sha256").update(value).digest();
 }
 
-function isValidCronAuthorization(
+export function isValidCronAuthorization(
   authHeader: string | null,
   cronSecret: string,
 ): boolean {
