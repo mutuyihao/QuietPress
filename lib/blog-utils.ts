@@ -22,6 +22,8 @@ const MAX_CACHE_SIZE = 200;
 const CACHE_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_CODE_LANGUAGE = "text";
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
+const CJK_REGEX =
+  /[\u4e00-\u9fa5]|[\u3040-\u309f]|[\u30a0-\u30ff]|[\uac00-\ud7af]/g;
 
 type HighlightedCodeToken = Tokens.Code & {
   highlightedHtml?: string;
@@ -45,12 +47,10 @@ export function createPostSlug(title: string): string {
 export function calculateReadingTime(markdown: string): number {
   const cleanText = markdown.replace(/[#*`\[\]()]/g, "");
 
-  const cjkRegex =
-    /[\u4e00-\u9fa5]|[\u3040-\u309f]|[\u30a0-\u30ff]|[\uac00-\ud7af]/g;
-  const cjkMatches = cleanText.match(cjkRegex);
+  const cjkMatches = cleanText.match(CJK_REGEX);
   const cjkCount = cjkMatches ? cjkMatches.length : 0;
 
-  const westernText = cleanText.replace(cjkRegex, " ");
+  const westernText = cleanText.replace(CJK_REGEX, " ");
   const westernWords = westernText
     .trim()
     .split(/\s+/)
@@ -67,7 +67,7 @@ function cloneMarkdownResult(
 ): MarkdownRenderResult {
   return {
     html: result.html,
-    headings: result.headings.map((heading) => ({ ...heading })),
+    headings: result.headings,
   };
 }
 

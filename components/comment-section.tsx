@@ -31,9 +31,6 @@ export function CommentSection({ postId }: CommentSectionProps) {
 
   useEffect(() => {
     let cancelled = false;
-    queueMicrotask(() => {
-      if (!cancelled) setLoading(true);
-    });
     fetch(`/api/comments?postId=${postId}`)
       .then((res) =>
         readApiJson<{ comments: Comment[]; message?: string }>(res),

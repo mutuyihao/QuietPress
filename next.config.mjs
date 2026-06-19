@@ -46,6 +46,11 @@ const configuredImageRemotePatterns = [
   getImageRemotePattern(process.env.S3_PUBLIC_URL_BASE),
 ].filter(Boolean);
 
+const ogFontTraceIncludes = [
+  "./node_modules/@fontsource/noto-sans-sc/files/noto-sans-sc-chinese-simplified-400-normal.woff",
+  "./node_modules/@fontsource/noto-sans-sc/files/noto-sans-sc-chinese-simplified-700-normal.woff",
+];
+
 const defaultCspHeader = {
   key: "Content-Security-Policy",
   value: [
@@ -83,7 +88,17 @@ const baseSecurityHeaders = [
 
 const nextConfig = {
   output: "standalone",
+  poweredByHeader: false,
+  outputFileTracingIncludes: {
+    "**/opengraph-image*": ogFontTraceIncludes,
+  },
   allowedDevOrigins: ["172.18.0.1"],
+  compiler: {
+    removeConsole: isDev ? false : { exclude: ["error"] },
+  },
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts"],
+  },
   images: {
     remotePatterns: [
       ...staticImageRemotePatterns,

@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "@mdxeditor/editor/style.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -143,11 +142,6 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-}
-
-html {
-  overflow-y: scroll;
-  scrollbar-gutter: stable;
 }
 
 @supports not (scrollbar-gutter: stable) {

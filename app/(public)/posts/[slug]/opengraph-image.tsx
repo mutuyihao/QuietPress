@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { DEFAULT_SITE_NAME } from "@/lib/site-defaults";
 import { getPostBySlug, getSiteSettings } from "@/lib/queries";
+import { getOgFonts, OG_FONT_FAMILY } from "@/lib/og-fonts";
 
 export const size = {
   width: 1200,
@@ -8,6 +9,7 @@ export const size = {
 };
 
 export const contentType = "image/png";
+export const runtime = "nodejs";
 
 interface OpenGraphImageProps {
   params: Promise<{ slug: string }>;
@@ -35,7 +37,7 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
           "linear-gradient(145deg, #171411 0%, #2a211b 52%, #806d58 100%)",
         color: "#fbf7ef",
         padding: 72,
-        fontFamily: "serif",
+        fontFamily: OG_FONT_FAMILY,
       }}
     >
       <div
@@ -46,6 +48,7 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
           fontSize: 24,
           letterSpacing: 5,
           textTransform: "uppercase",
+          fontWeight: 700,
           color: "#d9cbb8",
         }}
       >
@@ -60,6 +63,7 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
             fontSize: 68,
             lineHeight: 1,
             letterSpacing: -2,
+            fontWeight: 700,
           }}
         >
           {title}
@@ -78,6 +82,9 @@ export default async function OpenGraphImage({ params }: OpenGraphImageProps) {
       </div>
       <div style={{ height: 2, width: 260, background: "#fbf7ef" }} />
     </div>,
-    size,
+    {
+      ...size,
+      fonts: await getOgFonts(),
+    },
   );
 }

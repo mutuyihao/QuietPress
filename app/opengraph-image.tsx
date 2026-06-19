@@ -4,6 +4,7 @@ import {
   DEFAULT_SITE_NAME,
 } from "@/lib/site-defaults";
 import { getSiteSettings } from "@/lib/queries";
+import { getOgFonts, OG_FONT_FAMILY } from "@/lib/og-fonts";
 
 export const size = {
   width: 1200,
@@ -11,6 +12,7 @@ export const size = {
 };
 
 export const contentType = "image/png";
+export const runtime = "nodejs";
 
 export default async function OpenGraphImage() {
   const settings = await getSiteSettings();
@@ -29,7 +31,7 @@ export default async function OpenGraphImage() {
           "linear-gradient(135deg, #f8f5ef 0%, #ebe3d5 55%, #d9cbb8 100%)",
         color: "#201b16",
         padding: 72,
-        fontFamily: "serif",
+        fontFamily: OG_FONT_FAMILY,
       }}
     >
       <div
@@ -37,6 +39,7 @@ export default async function OpenGraphImage() {
           fontSize: 28,
           letterSpacing: 6,
           textTransform: "uppercase",
+          fontWeight: 700,
           color: "#75695d",
         }}
       >
@@ -49,6 +52,7 @@ export default async function OpenGraphImage() {
             fontSize: 76,
             lineHeight: 0.95,
             letterSpacing: -3,
+            fontWeight: 700,
           }}
         >
           {title}
@@ -67,6 +71,9 @@ export default async function OpenGraphImage() {
       </div>
       <div style={{ height: 2, width: 220, background: "#201b16" }} />
     </div>,
-    size,
+    {
+      ...size,
+      fonts: await getOgFonts(),
+    },
   );
 }

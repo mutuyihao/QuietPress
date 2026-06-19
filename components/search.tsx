@@ -30,6 +30,7 @@ interface PostSearchItem {
 const SEARCH_HISTORY_KEY = "quietpress:search-history";
 const MAX_HISTORY_ITEMS = 5;
 const MAX_HISTORY_QUERY_LENGTH = 60;
+const MAX_SEARCH_QUERY_LENGTH = 200;
 
 function normalizeHistoryTerm(value: string): string {
   return value.replace(/\s+/g, " ").trim().slice(0, MAX_HISTORY_QUERY_LENGTH);
@@ -336,6 +337,7 @@ export function Search() {
                 ref={inputRef}
                 type="text"
                 value={query}
+                maxLength={MAX_SEARCH_QUERY_LENGTH}
                 onChange={(e) => {
                   setQuery(e.target.value);
                   setSelectedIndex(0);

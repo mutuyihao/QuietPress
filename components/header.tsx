@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { MenuIcon } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { ScrollProgress } from "@/components/scroll-progress";
-import { Search } from "@/components/search";
 import {
   Sheet,
   SheetContent,
@@ -13,6 +13,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+const Search = dynamic(
+  () => import("@/components/search").then((m) => m.Search),
+  { ssr: false },
+);
 
 interface HeaderProps {
   siteName: string;

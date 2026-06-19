@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { PostWithTags } from "@/lib/types";
-import { formatDate, calculateReadingTime } from "@/lib/blog-utils";
+import { formatDate } from "@/lib/blog-utils";
 import { postPath, tagPath } from "@/lib/route-segments";
 
 interface PostCardProps {
@@ -9,8 +9,6 @@ interface PostCardProps {
 }
 
 export function PostCard({ post, index = 0 }: PostCardProps) {
-  const readingTime = calculateReadingTime(post.content_markdown);
-
   return (
     <article
       className="animate-fade-up"
@@ -22,7 +20,7 @@ export function PostCard({ post, index = 0 }: PostCardProps) {
             {formatDate(post.published_at || post.created_at)}
           </time>
           <span aria-hidden="true">·</span>
-          <span>{readingTime} 分钟阅读</span>
+          <span>{post.reading_time_minutes} 分钟阅读</span>
           {post.views_count !== undefined && post.views_count > 0 && (
             <>
               <span aria-hidden="true">·</span>

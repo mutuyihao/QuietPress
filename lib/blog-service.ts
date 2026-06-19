@@ -178,8 +178,10 @@ export async function createBlogPostDraft(
   input: CreatePostDraftInput,
 ) {
   const repos = createRepositories(context.supabase);
-  const tagIds = await resolveTagIds(context, input.tag_slugs);
-  const slug = await getUniquePostSlug(context, createPostSlug(input.title));
+  const [tagIds, slug] = await Promise.all([
+    resolveTagIds(context, input.tag_slugs),
+    getUniquePostSlug(context, createPostSlug(input.title)),
+  ]);
   const readingTime = calculateReadingTime(input.content_markdown);
 
   const { id } = await repos.posts.create({

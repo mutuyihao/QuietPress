@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { Source_Serif_4, Inter } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import {
   DEFAULT_SITE_DESCRIPTION,
@@ -10,19 +9,15 @@ import { getDefaultSiteUrl } from "@/lib/env";
 import { getSiteSettings } from "@/lib/queries";
 import { ThemeProvider } from "@/components/theme-provider";
 import { OrganizationLD, WebSiteLD } from "@/components/json-ld";
+import "@fontsource/inter/latin-400.css";
+import "@fontsource/inter/latin-500.css";
+import "@fontsource/inter/latin-600.css";
+import "@fontsource/inter/latin-700.css";
+import "@fontsource/source-serif-4/latin-400.css";
+import "@fontsource/source-serif-4/latin-400-italic.css";
+import "@fontsource/source-serif-4/latin-600.css";
+import "@fontsource/source-serif-4/latin-700.css";
 import "./globals.css";
-
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  variable: "--font-serif",
-  display: "swap",
-});
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap",
-});
 
 function getPreconnectOrigins(): string[] {
   return Array.from(
@@ -114,7 +109,7 @@ export default async function RootLayout({
   return (
     <html
       lang={DEFAULT_LOCALE}
-      className={`${sourceSerif.variable} ${inter.variable} bg-background`}
+      className="bg-background"
       suppressHydrationWarning
     >
       <head>

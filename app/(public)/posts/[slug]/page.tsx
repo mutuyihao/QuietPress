@@ -6,11 +6,7 @@ import {
   getPublishedPostSlugs,
   getSiteSettings,
 } from "@/lib/queries";
-import {
-  renderMarkdown,
-  formatDate,
-  calculateReadingTime,
-} from "@/lib/blog-utils";
+import { renderMarkdown, formatDate } from "@/lib/blog-utils";
 import { DEFAULT_SITE_NAME } from "@/lib/site-defaults";
 import { CodeBlockEnhancer } from "@/components/code-block-enhancer";
 import { ViewCounter } from "@/components/view-counter";
@@ -115,7 +111,7 @@ export default async function PostPage({ params }: PostPageProps) {
             {formatDate(post.published_at || post.created_at)}
           </time>
           <span aria-hidden="true">·</span>
-          <span>{calculateReadingTime(post.content_markdown)} 分钟阅读</span>
+          <span>{post.reading_time_minutes} 分钟阅读</span>
           {post.views_count !== undefined && post.views_count > 0 && (
             <>
               <span aria-hidden="true">·</span>
