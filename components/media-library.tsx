@@ -17,6 +17,7 @@ import type { ImageUploadConfig } from "@/lib/image-upload-config";
 import type { StorageUsageOverview } from "@/lib/storage/usage";
 import { Button } from "@/components/ui/button";
 import { ImageUpload } from "@/components/image-upload";
+import { MediaImageViewer } from "@/components/media-image-viewer";
 import { Input } from "@/components/ui/input";
 import { getApiErrorMessage, readApiJson } from "@/lib/api-client";
 import { DEFAULT_LOCALE } from "@/lib/date-format";
@@ -67,6 +68,7 @@ export function MediaLibrary({
   const [provider, setProvider] = useState<string | null>(null);
   const [files, setFiles] = useState<StoredFile[]>([]);
   const [usage, setUsage] = useState<StorageUsageOverview | null>(null);
+  const [previewFile, setPreviewFile] = useState<StoredFile | null>(null);
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const [deletingPath, setDeletingPath] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -150,6 +152,9 @@ export function MediaLibrary({
         setFiles((current) =>
           current.filter((item) => item.path !== file.path),
         );
+        setPreviewFile((current) =>
+          current?.path === file.path ? null : current,
+        );
         reduceUsageAfterDelete(file);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "删除失败");
@@ -228,12 +233,18 @@ export function MediaLibrary({
             >
               <button
                 type="button"
-                onClick={() => mode === "select" && onSelect?.(file)}
+                onClick={() =>
+                  mode === "select" ? onSelect?.(file) : setPreviewFile(file)
+                }
                 className={cn(
                   "relative block aspect-square w-full overflow-hidden bg-muted text-left",
-                  mode === "select" && "cursor-pointer",
+                  mode === "select" ? "cursor-pointer" : "cursor-zoom-in",
                 )}
-                disabled={mode !== "select"}
+                aria-label={
+                  mode === "select"
+                    ? `选择图片 ${file.name}`
+                    : `查看图片 ${file.name}`
+                }
               >
                 <img
                   src={file.url}
@@ -244,6 +255,11 @@ export function MediaLibrary({
                 {mode === "select" && (
                   <span className="absolute inset-x-2 bottom-2 rounded-md border border-border bg-background/90 px-2 py-1 text-center text-xs font-medium text-foreground opacity-0 transition-opacity group-hover:opacity-100">
                     插入
+                  </span>
+                )}
+                {mode === "manage" && (
+                  <span className="absolute inset-x-2 bottom-2 rounded-md border border-border bg-background/90 px-2 py-1 text-center text-xs font-medium text-foreground opacity-0 transition-opacity group-hover:opacity-100">
+                    查看大图
                   </span>
                 )}
               </button>
@@ -308,6 +324,14 @@ export function MediaLibrary({
             </div>
           ))}
         </div>
+      )}
+
+      {mode === "manage" && (
+        <MediaImageViewer
+          file={previewFile}
+          files={files}
+          onFileChange={setPreviewFile}
+        />
       )}
     </div>
   );
