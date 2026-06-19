@@ -1,3 +1,5 @@
+/* eslint-disable @next/next/no-img-element -- Post covers can be custom storage URLs not known to next/image. */
+
 import Link from "next/link";
 import type { PostWithTags } from "@/lib/types";
 import { formatDate } from "@/lib/blog-utils";
@@ -6,15 +8,33 @@ import { postPath, tagPath } from "@/lib/route-segments";
 interface PostCardProps {
   post: PostWithTags;
   index?: number;
+  fallbackImageUrl?: string | null;
 }
 
-export function PostCard({ post, index = 0 }: PostCardProps) {
+export function PostCard({
+  post,
+  index = 0,
+  fallbackImageUrl = null,
+}: PostCardProps) {
+  const imageUrl = post.cover_image_url || fallbackImageUrl;
+
   return (
     <article
       className="animate-fade-up"
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <Link href={postPath(post.slug)} className="post-card-link group">
+        {imageUrl && (
+          <div className="mb-5 aspect-[1200/630] overflow-hidden rounded-lg border border-border/30 bg-muted">
+            <img
+              src={imageUrl}
+              alt=""
+              loading={index === 0 ? "eager" : "lazy"}
+              decoding="async"
+              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+            />
+          </div>
+        )}
         <div className="flex items-center gap-2 text-[13px] tracking-wide text-muted-foreground tabular-nums">
           <time dateTime={post.published_at || post.created_at}>
             {formatDate(post.published_at || post.created_at)}
