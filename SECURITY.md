@@ -31,10 +31,13 @@ Include:
 - MCP media URL imports apply SSRF protections and reject non-HTTP(S), localhost/private-network, non-image, oversized, or timed-out downloads.
 - Scheduled publishing requires `CRON_SECRET`.
 - Security headers are configured in `next.config.mjs`.
+- Production startup validates required server-side environment variables, including Supabase service credentials, `IP_HASH_SECRET`, storage provider settings, and `CRON_SECRET`.
+- Admin and auth pages receive a per-request CSP nonce from `proxy.ts`; public pages retain static security headers from `next.config.mjs`.
+- Public/admin API routes use a shared response wrapper with `x-request-id`, fixed 5xx client messages, and structured server logs.
 
 ## Known Gaps
 
-- Rate limiting is process-local and should be moved to Redis/Upstash for multi-instance deployments.
-- There is no formal dependency vulnerability workflow beyond GitHub Actions CI.
-- There is no automated test suite yet.
-- API response envelopes are not fully standardized.
+- Rate limiting uses the Supabase `rate_limits` RPC when the service role key is available, but falls back to process-local memory during configuration or database outages.
+- Dependency monitoring uses Dependabot plus the scheduled/manual `Dependency Audit` workflow. SAST, secret scanning, and container scanning are still repository/platform setup tasks.
+- Automated tests cover key pure logic and security boundaries, but there is no browser E2E suite yet.
+- OAuth/MCP endpoints intentionally preserve protocol-specific response shapes; internal API response envelopes use `{ ok, data/error }`.

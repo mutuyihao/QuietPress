@@ -37,7 +37,7 @@ Comprehensive optimization & upgrade assessment across 6 dimensions: Code Qualit
 | AUD-068 | Medium   | **Fixed** | Security/Scale | Rate limiter now uses Supabase `rate_limits` RPC with in-memory fallback; identifiers are hashed.                                           |
 | AUD-072 | Medium   | **Fixed** | Security       | CSP + security headers — fully configured in `next.config.mjs`                                                                              |
 | AUD-077 | Medium   | **Fixed** | Code Quality   | Supabase storage provider is no longer cached with request-bound clients; S3/R2 cache remains env-only.                                     |
-| AUD-078 | Medium   | Deferred  | Code Quality   | No test framework — intentionally deferred in this repair pass per scope.                                                                   |
+| AUD-078 | Medium   | **Fixed** | Code Quality   | Vitest installed with 8 test files / 18 tests; CI runs `test:run` via `test:release`.                                                       |
 | AUD-094 | High     | **Fixed** | Code Quality   | Global lint disables removed; remaining `<img>` cases have local documented exceptions.                                                     |
 | AUD-074 | Medium   | **Fixed** | Security       | Admin content/settings/storage/password/comment/media/migration actions now write audit logs.                                               |
 | AUD-103 | Low      | **Fixed** | UX/A11y        | Search dialog combobox/listbox semantics, 404 recovery links, tab state ARIA, toggle/collapse ARIA, and explicit native button types added. |
@@ -84,13 +84,13 @@ None.
 
 ### Session 5 Summary
 
-| Severity  | Open After Repair Pass | Notes                                               |
-| --------- | ---------------------- | --------------------------------------------------- |
-| Critical  | 0                      | -                                                   |
-| High      | 0                      | -                                                   |
-| Medium    | 1                      | Deferred test framework                             |
-| Low       | 0                      | -                                                   |
-| **Total** | **1**                  | Test framework intentionally not added in this pass |
+| Severity  | Open After Repair Pass | Notes                 |
+| --------- | ---------------------- | --------------------- |
+| Critical  | 0                      | -                     |
+| High      | 0                      | -                     |
+| Medium    | 0                      | -                     |
+| Low       | 0                      | -                     |
+| **Total** | **0**                  | All findings resolved |
 
 Detailed issue tracking and fix plan: [project-plan.md](./project-plan.md)
 

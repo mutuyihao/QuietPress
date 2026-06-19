@@ -74,12 +74,15 @@ IP_HASH_SECRET=generate-with-openssl-rand-hex-32
 
 ```powershell
 pnpm dev
+pnpm test:release
 pnpm format:check
 pnpm lint
 pnpm typecheck
-pnpm build
+$env:SKIP_SUPABASE_BOOTSTRAP='1'; pnpm build
 pnpm start
 ```
+
+本地发布构建默认使用 `SKIP_SUPABASE_BOOTSTRAP=1`，避免误连真实 Supabase 执行 Vercel bootstrap。Vercel 部署仍使用 `pnpm build`，并由 `VERCEL=1` 环境触发 bootstrap。
 
 Docker:
 
@@ -111,4 +114,4 @@ QuietPress 当前有意保持单管理员模式，不包含多作者、多管理
 
 ## 许可证
 
-尚未选择开源许可证。公开发布前需要明确许可证；在未添加许可证前，默认保留所有权利。
+尚未选择开源许可证，这是公开发布前的阻断项；在未添加许可证前，默认保留所有权利。
