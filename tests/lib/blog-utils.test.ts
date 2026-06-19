@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { renderMarkdown } from "@/lib/blog-utils";
+import { createPostSlug, renderMarkdown, slugify } from "@/lib/blog-utils";
+
+describe("blog slug generation", () => {
+  it("replaces title spaces with hyphens for post slugs", () => {
+    expect(createPostSlug("记录一次字节 OD 前端(React)岗位面试记录")).toBe(
+      "记录一次字节-od-前端react岗位面试记录",
+    );
+  });
+
+  it("normalizes repeated separators in generic slugs", () => {
+    expect(slugify("  Hello   QuietPress_blog  ")).toBe(
+      "hello-quietpress-blog",
+    );
+  });
+});
 
 describe("blog markdown rendering", () => {
   it("sanitizes unsafe HTML and URLs", async () => {

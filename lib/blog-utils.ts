@@ -33,7 +33,7 @@ export function slugify(text: string): string {
   const slug = text
     .normalize("NFKC")
     .toLowerCase()
-    .replace(/[^\p{Letter}\p{Number}\s-]/gu, "")
+    .replace(/[^\p{Letter}\p{Number}\s_-]/gu, "")
     .replace(/[\s_-]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
@@ -41,7 +41,7 @@ export function slugify(text: string): string {
 }
 
 export function createPostSlug(title: string): string {
-  return title.normalize("NFKC").trim() || "untitled";
+  return slugify(title);
 }
 
 export function calculateReadingTime(markdown: string): number {
