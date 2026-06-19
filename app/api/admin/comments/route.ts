@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import {
   apiError,
@@ -9,9 +8,30 @@ import {
 } from "@/lib/api-response";
 import { validateSameOriginRequest } from "@/lib/csrf";
 import { logAdminAction } from "@/lib/audit-log";
+import { enforceAdminRateLimit } from "@/lib/admin-rate-limit";
+import { isUuid, readJsonObject } from "@/lib/api-request";
+
+const COMMENT_STATUSES = ["pending", "approved", "spam"] as const;
+const COMMENT_MODERATION_STATUSES = ["approved", "spam"] as const;
+
+type CommentStatus = (typeof COMMENT_STATUSES)[number];
+type CommentModerationStatus = (typeof COMMENT_MODERATION_STATUSES)[number];
 
 function isMissingCommentsTable(error: { code?: string }): boolean {
   return error.code === "42P01";
+}
+
+function parseCommentStatus(value: string | null): CommentStatus | null {
+  const status = value || "pending";
+  return COMMENT_STATUSES.includes(status as CommentStatus)
+    ? (status as CommentStatus)
+    : null;
+}
+
+function parseModerationStatus(value: unknown): CommentModerationStatus | null {
+  return COMMENT_MODERATION_STATUSES.includes(value as CommentModerationStatus)
+    ? (value as CommentModerationStatus)
+    : null;
 }
 
 export const GET = withApiRoute(
@@ -22,13 +42,26 @@ export const GET = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
+      scope: "admin-comments",
+      windowMs: 60_000,
+      maxRequests: 120,
+      message: "Too many comment requests. Please try again later.",
+    });
+    if (rateLimitError) return rateLimitError;
+
     const { searchParams } = request.nextUrl;
-    const status = searchParams.get("status") || "pending";
+    const status = parseCommentStatus(searchParams.get("status"));
+    if (!status) {
+      return apiError(
+        "INVALID_COMMENT_STATUS",
+        "status must be pending, approved, or spam",
+        400,
+      );
+    }
 
     try {
-      const supabase = await createClient();
-
-      const { data: comments, error } = await supabase
+      const { data: comments, error } = await session.supabase
         .from("comments")
         .select("*, posts!inner(title, slug)")
         .eq("status", status)
@@ -63,21 +96,34 @@ export const PATCH = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
+      scope: "admin-comments-moderate",
+      windowMs: 60_000,
+      maxRequests: 60,
+      message: "Too many comment moderation requests. Please try again later.",
+    });
+    if (rateLimitError) return rateLimitError;
+
     try {
-      const { id, status } = await request.json();
-      if (!id || !["approved", "spam"].includes(status)) {
+      const body = await readJsonObject(request);
+      if (!body) {
+        return apiError("INVALID_JSON", "Request body must be valid JSON", 400);
+      }
+
+      const id = body.id;
+      const status = parseModerationStatus(body.status);
+      if (!isUuid(id) || !status) {
         return apiError("INVALID_PARAMS", "Invalid params", 400);
       }
 
-      const supabase = await createClient();
-      const { error } = await supabase
+      const { error } = await session.supabase
         .from("comments")
         .update({ status })
         .eq("id", id);
 
       if (error) return apiInternalError("COMMENT_UPDATE_FAILED", error);
 
-      await logAdminAction(supabase, {
+      await logAdminAction(session.supabase, {
         action: "comment.update_status",
         entityType: "comment",
         entityId: id,
@@ -104,17 +150,27 @@ export const DELETE = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
+      scope: "admin-comments-delete",
+      windowMs: 60_000,
+      maxRequests: 60,
+      message: "Too many comment delete requests. Please try again later.",
+    });
+    if (rateLimitError) return rateLimitError;
+
     try {
       const { searchParams } = request.nextUrl;
       const id = searchParams.get("id");
-      if (!id) return apiError("ID_REQUIRED", "id required", 400);
+      if (!isUuid(id)) return apiError("INVALID_COMMENT_ID", "Invalid id", 400);
 
-      const supabase = await createClient();
-      const { error } = await supabase.from("comments").delete().eq("id", id);
+      const { error } = await session.supabase
+        .from("comments")
+        .delete()
+        .eq("id", id);
 
       if (error) return apiInternalError("COMMENT_DELETE_FAILED", error);
 
-      await logAdminAction(supabase, {
+      await logAdminAction(session.supabase, {
         action: "comment.delete",
         entityType: "comment",
         entityId: id,

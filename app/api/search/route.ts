@@ -17,6 +17,10 @@ function normalizeSearchQuery(input: string): string {
 export const GET = withApiRoute("search.GET", async (request: NextRequest) => {
   const { searchParams } = request.nextUrl;
   const raw = normalizeSearchQuery(searchParams.get("q") || "");
+  if (!raw) {
+    return apiOk([]);
+  }
+
   const rateLimit = await checkRateLimitForRequest(request, {
     scope: "search",
     maxRequests: 60,

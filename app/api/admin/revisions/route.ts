@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
 import { getAdminSession } from "@/lib/admin-auth";
 import {
   apiError,
@@ -7,6 +6,8 @@ import {
   apiOk,
   withApiRoute,
 } from "@/lib/api-response";
+import { enforceAdminRateLimit } from "@/lib/admin-rate-limit";
+import { isUuid } from "@/lib/api-request";
 
 function isMissingRevisionsTable(error: { code?: string }): boolean {
   return error.code === "42P01";
@@ -20,17 +21,23 @@ export const GET = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
+      scope: "admin-revisions",
+      windowMs: 60_000,
+      maxRequests: 120,
+      message: "Too many revision requests. Please try again later.",
+    });
+    if (rateLimitError) return rateLimitError;
+
     const { searchParams } = request.nextUrl;
     const postId = searchParams.get("postId");
 
-    if (!postId) {
-      return apiError("POST_ID_REQUIRED", "postId required", 400);
+    if (!isUuid(postId)) {
+      return apiError("INVALID_POST_ID", "Invalid postId", 400);
     }
 
     try {
-      const supabase = await createClient();
-
-      const { data: revisions, error } = await supabase
+      const { data: revisions, error } = await session.supabase
         .from("post_revisions")
         .select("*")
         .eq("post_id", postId)

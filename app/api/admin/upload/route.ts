@@ -19,7 +19,7 @@ import {
 import { validateSameOriginRequest } from "@/lib/csrf";
 import { logAdminAction } from "@/lib/audit-log";
 import { processImageBuffer } from "@/lib/image-processing";
-import { checkRateLimitIdentifier } from "@/lib/rate-limit";
+import { enforceAdminRateLimit } from "@/lib/admin-rate-limit";
 
 const ALLOWED_IMAGE_MIME = [
   "image/jpeg",
@@ -97,22 +97,13 @@ export const POST = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
-    const rateLimit = await checkRateLimitIdentifier(session.user.id, {
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
       scope: "admin-upload",
       windowMs: 60_000,
       maxRequests: 30,
+      message: "Too many uploads. Please try again later.",
     });
-
-    if (!rateLimit.allowed) {
-      return apiError(
-        "RATE_LIMITED",
-        "Too many uploads. Please try again later.",
-        429,
-        {
-          headers: { "Retry-After": String(rateLimit.retryAfter) },
-        },
-      );
-    }
+    if (rateLimitError) return rateLimitError;
 
     try {
       const formData = await request.formData();

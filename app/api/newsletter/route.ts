@@ -8,6 +8,7 @@ import {
   withApiRoute,
 } from "@/lib/api-response";
 import { validateSameOriginRequest } from "@/lib/csrf";
+import { readJsonObject } from "@/lib/api-request";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_EMAIL_LENGTH = 320;
@@ -36,7 +37,12 @@ export const POST = withApiRoute(
         );
       }
 
-      const { email } = await request.json();
+      const body = await readJsonObject(request);
+      if (!body) {
+        return apiError("INVALID_JSON", "Request body must be valid JSON", 400);
+      }
+
+      const email = body.email;
       const normalizedEmail =
         typeof email === "string" ? email.toLowerCase().trim() : "";
 
@@ -60,10 +66,7 @@ export const POST = withApiRoute(
         .eq("email", normalizedEmail)
         .maybeSingle();
 
-      if (
-        lookupError &&
-        !lookupError.message.includes("newsletter_subscribers")
-      ) {
+      if (lookupError && lookupError.code !== "42P01") {
         return apiInternalError("SUBSCRIPTION_LOOKUP_FAILED", lookupError);
       }
 
@@ -89,7 +92,7 @@ export const POST = withApiRoute(
       });
 
       if (error) {
-        if (error.message.includes("newsletter_subscribers")) {
+        if (error.code === "42P01") {
           return apiError(
             "MIGRATION_REQUIRED",
             "Initial database migration has not been applied.",

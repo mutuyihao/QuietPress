@@ -9,6 +9,7 @@ import {
 } from "@/lib/api-response";
 import { validateSameOriginRequest } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
+import { isUuid, readJsonObject } from "@/lib/api-request";
 
 export const POST = withApiRoute(
   "view-event.POST",
@@ -29,8 +30,13 @@ export const POST = withApiRoute(
         });
       }
 
-      const { postId } = await request.json();
-      if (!postId || typeof postId !== "string") {
+      const body = await readJsonObject(request);
+      if (!body) {
+        return apiError("INVALID_JSON", "Request body must be valid JSON", 400);
+      }
+
+      const postId = body.postId;
+      if (!isUuid(postId)) {
         return apiError("INVALID_POST_ID", "Invalid postId", 400);
       }
 

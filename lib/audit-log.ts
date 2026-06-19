@@ -33,7 +33,7 @@ export async function logAdminAction(
         : null,
     });
 
-    if (error && !error.message.includes("admin_audit_logs")) {
+    if (error && error.code !== "42P01") {
       logger.warn("failed to write admin audit log", {
         err: error,
         action: input.action,

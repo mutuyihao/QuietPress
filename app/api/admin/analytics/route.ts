@@ -7,10 +7,24 @@ import {
   apiOk,
   withApiRoute,
 } from "@/lib/api-response";
-import { checkRateLimitIdentifier } from "@/lib/rate-limit";
+import { enforceAdminRateLimit } from "@/lib/admin-rate-limit";
+
+const DEFAULT_ANALYTICS_DAYS = 30;
+const MIN_ANALYTICS_DAYS = 1;
+const MAX_ANALYTICS_DAYS = 365;
 
 function isMissingAnalyticsSchema(error: { code?: string }): boolean {
   return error.code === "42P01" || error.code === "42883";
+}
+
+function parseAnalyticsDays(value: string | null): number | null {
+  if (!value) return DEFAULT_ANALYTICS_DAYS;
+
+  const days = Number(value);
+  if (!Number.isInteger(days)) return null;
+  if (days < MIN_ANALYTICS_DAYS || days > MAX_ANALYTICS_DAYS) return null;
+
+  return days;
 }
 
 export const GET = withApiRoute(
@@ -21,25 +35,23 @@ export const GET = withApiRoute(
       return apiError("UNAUTHORIZED", "Unauthorized", 401);
     }
 
-    const rateLimit = await checkRateLimitIdentifier(session.user.id, {
+    const rateLimitError = await enforceAdminRateLimit(session.user.id, {
       scope: "admin-analytics",
       windowMs: 60_000,
       maxRequests: 60,
+      message: "Too many analytics requests. Please try again later.",
     });
-
-    if (!rateLimit.allowed) {
-      return apiError(
-        "RATE_LIMITED",
-        "Too many analytics requests. Please try again later.",
-        429,
-        {
-          headers: { "Retry-After": String(rateLimit.retryAfter) },
-        },
-      );
-    }
+    if (rateLimitError) return rateLimitError;
 
     const { searchParams } = request.nextUrl;
-    const days = parseInt(searchParams.get("days") || "30", 10);
+    const days = parseAnalyticsDays(searchParams.get("days"));
+    if (!days) {
+      return apiError(
+        "INVALID_ANALYTICS_RANGE",
+        `days must be an integer between ${MIN_ANALYTICS_DAYS} and ${MAX_ANALYTICS_DAYS}`,
+        400,
+      );
+    }
 
     const endDate = new Date();
     const startDate = new Date();

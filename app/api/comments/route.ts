@@ -10,6 +10,7 @@ import {
 } from "@/lib/api-response";
 import { validateSameOriginRequest } from "@/lib/csrf";
 import { getClientAddress, hashSensitiveValue } from "@/lib/privacy";
+import { isUuid, readJsonObject } from "@/lib/api-request";
 
 const MAX_AUTHOR_NAME_LENGTH = 80;
 const MAX_AUTHOR_EMAIL_LENGTH = 320;
@@ -35,7 +36,7 @@ async function getCommentsEnabled(
     .maybeSingle();
 
   if (error) {
-    if (error.code === "42703" || error.message.includes("comments_enabled")) {
+    if (error.code === "42703") {
       return true;
     }
     throw error;
@@ -76,10 +77,7 @@ function isMissingCommentTreeRpc(error: {
   message?: string;
   code?: string;
 }): boolean {
-  return (
-    error.code === "42883" ||
-    Boolean(error.message?.includes("get_public_comment_tree"))
-  );
+  return error.code === "42883" || error.code === "PGRST202";
 }
 
 // GET comments for a post
@@ -89,37 +87,50 @@ export const GET = withApiRoute(
     const { searchParams } = request.nextUrl;
     const postId = searchParams.get("postId");
 
-    if (!postId) {
-      return apiError("POST_ID_REQUIRED", "postId required", 400);
+    if (!isUuid(postId)) {
+      return apiError("INVALID_POST_ID", "Invalid postId", 400);
     }
 
     try {
+      const rateLimit = await checkRateLimitForRequest(request, {
+        scope: "comments-read",
+        maxRequests: 300,
+        windowMs: 60_000,
+      });
+
+      if (!rateLimit.allowed) {
+        return apiError("RATE_LIMITED", "Too many comment requests", 429, {
+          headers: { "Retry-After": String(rateLimit.retryAfter) },
+        });
+      }
+
       const supabase = createPublicClient();
-      const commentsEnabled = await getCommentsEnabled(supabase);
+      const now = new Date().toISOString();
+
+      const [commentsEnabled, post] = await Promise.all([
+        getCommentsEnabled(supabase),
+        supabase
+          .from("posts")
+          .select("id")
+          .eq("id", postId)
+          .eq("status", "published")
+          .lte("published_at", now)
+          .maybeSingle(),
+      ]);
 
       if (!commentsEnabled) {
         return apiOk({ comments: [], commentsEnabled: false });
       }
 
-      const now = new Date().toISOString();
-
-      const { data: post, error: postError } = await supabase
-        .from("posts")
-        .select("id")
-        .eq("id", postId)
-        .eq("status", "published")
-        .lte("published_at", now)
-        .maybeSingle();
-
-      if (postError) {
+      if (post.error) {
         return apiInternalError(
           "COMMENTS_LOAD_FAILED",
-          postError,
+          post.error,
           "Failed to load comments",
         );
       }
 
-      if (!post) {
+      if (!post.data) {
         return apiError("POST_NOT_FOUND", "Post not found", 404);
       }
 
@@ -199,15 +210,14 @@ export const POST = withApiRoute(
         );
       }
 
-      const body = await request.json();
+      const body = await readJsonObject(request);
+      if (!body) {
+        return apiError("INVALID_JSON", "Request body must be valid JSON", 400);
+      }
+
       const { postId, parentId, authorName, authorEmail, content } = body;
 
-      if (
-        typeof postId !== "string" ||
-        !postId ||
-        typeof content !== "string" ||
-        !content.trim()
-      ) {
+      if (!isUuid(postId) || typeof content !== "string" || !content.trim()) {
         return apiError(
           "INVALID_COMMENT_INPUT",
           "postId and content are required",
@@ -233,6 +243,13 @@ export const POST = withApiRoute(
           : "";
       const normalizedParentId =
         typeof parentId === "string" && parentId ? parentId : null;
+      if (normalizedParentId && !isUuid(normalizedParentId)) {
+        return apiError(
+          "INVALID_PARENT_COMMENT",
+          "Invalid parent comment",
+          400,
+        );
+      }
 
       const sanitizedContent = sanitizeHtml(content.trim(), {
         allowedTags: [],
@@ -253,23 +270,24 @@ export const POST = withApiRoute(
       );
 
       const supabase = createPublicClient();
-      const commentsEnabled = await getCommentsEnabled(supabase);
+      const now = new Date().toISOString();
+
+      const [commentsEnabled, post] = await Promise.all([
+        getCommentsEnabled(supabase),
+        supabase
+          .from("posts")
+          .select("id")
+          .eq("id", postId)
+          .eq("status", "published")
+          .lte("published_at", now)
+          .maybeSingle(),
+      ]);
 
       if (!commentsEnabled) {
         return apiError("COMMENTS_DISABLED", "Comments are disabled", 403);
       }
 
-      const now = new Date().toISOString();
-
-      const { data: post, error: postError } = await supabase
-        .from("posts")
-        .select("id")
-        .eq("id", postId)
-        .eq("status", "published")
-        .lte("published_at", now)
-        .maybeSingle();
-
-      if (postError || !post) {
+      if (post.error || !post.data) {
         return apiError("POST_NOT_FOUND", "Post not found", 404);
       }
 
