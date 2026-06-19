@@ -24,17 +24,6 @@ export function PostCard({
       style={{ animationDelay: `${index * 80}ms` }}
     >
       <Link href={postPath(post.slug)} className="post-card-link group">
-        {imageUrl && (
-          <div className="mb-5 aspect-[1200/630] overflow-hidden rounded-lg border border-border/30 bg-muted">
-            <img
-              src={imageUrl}
-              alt=""
-              loading={index === 0 ? "eager" : "lazy"}
-              decoding="async"
-              className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
-            />
-          </div>
-        )}
         <div className="flex items-center gap-2 text-[13px] tracking-wide text-muted-foreground tabular-nums">
           <time dateTime={post.published_at || post.created_at}>
             {formatDate(post.published_at || post.created_at)}
@@ -48,14 +37,29 @@ export function PostCard({
             </>
           )}
         </div>
-        <h2 className="mt-3 w-full font-serif text-[1.375rem] leading-snug font-semibold text-foreground/85 group-hover:text-foreground/65 transition-editorial tracking-tight">
-          {post.title}
-        </h2>
-        {post.excerpt && (
-          <p className="mt-3 text-[15px] text-muted-foreground leading-relaxed line-clamp-2">
-            {post.excerpt}
-          </p>
-        )}
+        <div className="mt-3 flex items-start gap-4">
+          <div className="min-w-0 flex-1">
+            <h2 className="w-full font-serif text-[1.375rem] leading-snug font-semibold tracking-tight text-foreground/85 transition-editorial group-hover:text-foreground/65">
+              {post.title}
+            </h2>
+            {post.excerpt && (
+              <p className="mt-3 line-clamp-2 text-[15px] leading-relaxed text-muted-foreground">
+                {post.excerpt}
+              </p>
+            )}
+          </div>
+          {imageUrl && (
+            <div className="mt-1 aspect-[4/3] w-20 shrink-0 overflow-hidden rounded-md border border-border/30 bg-muted sm:w-24">
+              <img
+                src={imageUrl}
+                alt=""
+                loading={index === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className="h-full w-full object-cover transition-opacity duration-300 group-hover:opacity-85"
+              />
+            </div>
+          )}
+        </div>
       </Link>
       {post.tags.length > 0 && (
         <div className="mt-4 flex flex-wrap gap-3">
