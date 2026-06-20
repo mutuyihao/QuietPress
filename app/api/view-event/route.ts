@@ -11,6 +11,23 @@ import { validateSameOriginRequest } from "@/lib/csrf";
 import { logger } from "@/lib/logger";
 import { isUuid, readJsonObject } from "@/lib/api-request";
 
+async function checkViewEventRateLimit(request: NextRequest) {
+  try {
+    return await checkRateLimitForRequest(request, {
+      scope: "view-events",
+      maxRequests: 120,
+      windowMs: 60_000,
+    });
+  } catch (err) {
+    logger.warn("view event rate limit unavailable; allowing event", { err });
+    return null;
+  }
+}
+
+function isLegacyIncrementResult(value: unknown): boolean {
+  return value === null || value === undefined;
+}
+
 export const POST = withApiRoute(
   "view-event.POST",
   async (request: NextRequest) => {
@@ -18,13 +35,9 @@ export const POST = withApiRoute(
     if (csrfError) return csrfError;
 
     try {
-      const rateLimit = await checkRateLimitForRequest(request, {
-        scope: "view-events",
-        maxRequests: 120,
-        windowMs: 60_000,
-      });
+      const rateLimit = await checkViewEventRateLimit(request);
 
-      if (!rateLimit.allowed) {
+      if (rateLimit && !rateLimit.allowed) {
         return apiError("RATE_LIMITED", "Too many view events", 429, {
           headers: { "Retry-After": String(rateLimit.retryAfter) },
         });
@@ -47,14 +60,18 @@ export const POST = withApiRoute(
       );
 
       if (incrementError) {
-        return apiInternalError(
-          "VIEW_EVENT_FAILED",
-          incrementError,
-          "Failed to log view event",
-        );
+        logger.warn("view event increment failed", {
+          err: incrementError,
+          postId,
+        });
+
+        return apiOk({
+          analyticsLogged: false,
+          viewsIncremented: false,
+        });
       }
 
-      if (found !== true) {
+      if (found === false) {
         return apiError("POST_NOT_FOUND", "Post not found", 404);
       }
 
@@ -69,7 +86,10 @@ export const POST = withApiRoute(
         });
       }
 
-      return apiOk({ analyticsLogged: !eventError });
+      return apiOk({
+        analyticsLogged: !eventError,
+        viewsIncremented: found === true || isLegacyIncrementResult(found),
+      });
     } catch (err) {
       return apiInternalError(
         "VIEW_EVENT_FAILED",

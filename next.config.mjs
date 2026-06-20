@@ -51,6 +51,16 @@ const ogFontTraceIncludes = [
   "./node_modules/@fontsource/noto-sans-sc/files/noto-sans-sc-chinese-simplified-700-normal.woff",
 ];
 
+const analyticsScriptSources = [
+  "https://va.vercel-scripts.com",
+  "https://static.cloudflareinsights.com",
+];
+
+const analyticsConnectSources = [
+  "https://vitals.vercel-insights.com",
+  "https://cloudflareinsights.com",
+];
+
 const defaultCspHeader = {
   key: "Content-Security-Policy",
   value: [
@@ -61,8 +71,8 @@ const defaultCspHeader = {
     `img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in ${configuredImageOrigins.join(" ")}`,
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
-    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
-    `connect-src 'self' https://*.supabase.co https://*.supabase.in https://vitals.vercel-insights.com${isDev ? " http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*" : ""}`,
+    `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} ${analyticsScriptSources.join(" ")}`,
+    `connect-src 'self' https://*.supabase.co https://*.supabase.in ${analyticsConnectSources.join(" ")}${isDev ? " http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*" : ""}`,
     "form-action 'self'",
     isDev ? "" : "upgrade-insecure-requests",
   ]

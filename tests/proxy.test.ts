@@ -8,6 +8,8 @@ describe("protected route CSP", () => {
     expect(csp).toContain("script-src 'self' 'nonce-nonce-test'");
     expect(csp).toContain("'strict-dynamic'");
     expect(csp).toContain("https://va.vercel-scripts.com");
+    expect(csp).toContain("https://static.cloudflareinsights.com");
+    expect(csp).toContain("https://cloudflareinsights.com");
     expect(csp).not.toContain("cdnjs.cloudflare.com");
   });
 

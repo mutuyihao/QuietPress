@@ -24,6 +24,16 @@ const configuredImageOrigins = Array.from(
   ),
 );
 
+const analyticsScriptSources = [
+  "https://va.vercel-scripts.com",
+  "https://static.cloudflareinsights.com",
+];
+
+const analyticsConnectSources = [
+  "https://vitals.vercel-insights.com",
+  "https://cloudflareinsights.com",
+];
+
 function serializeCsp(directives: string[]): string {
   return directives
     .filter(Boolean)
@@ -41,8 +51,8 @@ export function buildProtectedRouteCsp(nonce: string): string {
     `img-src 'self' data: blob: https://*.supabase.co https://*.supabase.in ${configuredImageOrigins.join(" ")}`,
     "font-src 'self' data:",
     "style-src 'self' 'unsafe-inline'",
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""} https://va.vercel-scripts.com`,
-    `connect-src 'self' https://*.supabase.co https://*.supabase.in https://vitals.vercel-insights.com${isDev ? " http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*" : ""}`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${isDev ? " 'unsafe-eval'" : ""} ${analyticsScriptSources.join(" ")}`,
+    `connect-src 'self' https://*.supabase.co https://*.supabase.in ${analyticsConnectSources.join(" ")}${isDev ? " http://localhost:* ws://localhost:* http://127.0.0.1:* ws://127.0.0.1:*" : ""}`,
     "form-action 'self'",
     isDev ? "" : "upgrade-insecure-requests",
   ]);
