@@ -584,6 +584,32 @@ html body[data-scroll-locked] .width-before-scroll-bar {
   margin-block: 1.5rem;
 }
 
+.rich-editor-content [data-lexical-decorator="true"] .cm-editor {
+  height: auto;
+  min-height: 8rem;
+  max-height: 28rem;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 0.625rem;
+  background: color-mix(in oklch, var(--muted) 88%, var(--background));
+  color: var(--foreground);
+}
+
+.rich-editor-content [data-lexical-decorator="true"] .cm-scroller {
+  max-height: 28rem;
+  overflow: auto;
+  font-family: var(--font-mono);
+  line-height: 1.7;
+}
+
+.rich-editor-content [data-lexical-decorator="true"] .cm-content {
+  padding-block: 0.75rem;
+}
+
+.rich-editor-content [data-lexical-decorator="true"] .cm-line {
+  white-space: pre;
+}
+
 .rich-editor-shell .cm-editor {
   height: var(--rich-editor-content-height, clamp(360px, 58vh, 640px));
   min-height: 0;
