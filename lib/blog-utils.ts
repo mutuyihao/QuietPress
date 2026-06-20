@@ -98,6 +98,74 @@ function getHeadingText(html: string): string {
     .trim();
 }
 
+function normalizeTextForComparison(text: string): string {
+  return decodeHtmlEntities(
+    text
+      .replace(/\\([\\`*{}\[\]()#+\-.!_>])/g, "$1")
+      .replace(/<[^>]*>/g, ""),
+  )
+    .normalize("NFKC")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizeMarkdownHeadingTextForComparison(text: string): string {
+  return normalizeTextForComparison(
+    text
+      .replace(/[ \t]+#+[ \t]*$/, "")
+      .replace(/!\[([^\]]*)]\([^)]+\)/g, "$1")
+      .replace(/\[([^\]]+)]\([^)]+\)/g, "$1")
+      .replace(/(`+)(.*?)\1/g, "$2")
+      .replace(/(\*\*|__)(.*?)\1/g, "$2")
+      .replace(/(\*|_)(.*?)\1/g, "$2")
+      .replace(/~~(.*?)~~/g, "$1"),
+  );
+}
+
+export function removeDuplicateLeadingTitleHeading(
+  markdown: string,
+  title: string,
+): string {
+  const normalizedTitle = normalizeTextForComparison(title);
+  if (!normalizedTitle) return markdown;
+
+  let lineStart = markdown.charCodeAt(0) === 0xfeff ? 1 : 0;
+
+  while (lineStart < markdown.length) {
+    let lineEnd = lineStart;
+    while (
+      lineEnd < markdown.length &&
+      markdown[lineEnd] !== "\n" &&
+      markdown[lineEnd] !== "\r"
+    ) {
+      lineEnd += 1;
+    }
+
+    const line = markdown.slice(lineStart, lineEnd);
+    let nextLineStart = lineEnd;
+    if (markdown[nextLineStart] === "\r") nextLineStart += 1;
+    if (markdown[nextLineStart] === "\n") nextLineStart += 1;
+
+    if (!line.trim()) {
+      lineStart = nextLineStart;
+      continue;
+    }
+
+    const headingMatch = line.match(/^[ \t]{0,3}#(?:[ \t]+|$)(.*)$/);
+    if (!headingMatch) return markdown;
+
+    const normalizedHeading = normalizeMarkdownHeadingTextForComparison(
+      headingMatch[1] || "",
+    );
+
+    if (normalizedHeading !== normalizedTitle) return markdown;
+
+    return markdown.slice(0, lineStart) + markdown.slice(nextLineStart);
+  }
+
+  return markdown;
+}
+
 function getUniqueHeadingId(
   text: string,
   slugCounts: Map<string, number>,

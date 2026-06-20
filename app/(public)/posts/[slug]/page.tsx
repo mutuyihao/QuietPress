@@ -6,7 +6,11 @@ import {
   getPublishedPostSlugs,
   getSiteSettings,
 } from "@/lib/queries";
-import { renderMarkdown, formatDate } from "@/lib/blog-utils";
+import {
+  renderMarkdown,
+  formatDate,
+  removeDuplicateLeadingTitleHeading,
+} from "@/lib/blog-utils";
 import { DEFAULT_SITE_NAME } from "@/lib/site-defaults";
 import { CodeBlockEnhancer } from "@/components/code-block-enhancer";
 import { ViewCounter } from "@/components/view-counter";
@@ -90,7 +94,11 @@ export default async function PostPage({ params }: PostPageProps) {
 
   const settings = await getSiteSettings();
   const commentsEnabled = settings?.comments_enabled ?? true;
-  const renderedContent = await renderMarkdown(post.content_markdown);
+  const contentMarkdown = removeDuplicateLeadingTitleHeading(
+    post.content_markdown,
+    post.title,
+  );
+  const renderedContent = await renderMarkdown(contentMarkdown);
   const siteUrl =
     settings?.base_url ||
     process.env.NEXT_PUBLIC_SITE_URL ||

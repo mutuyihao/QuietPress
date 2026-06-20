@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createPostSlug, renderMarkdown, slugify } from "@/lib/blog-utils";
+import {
+  createPostSlug,
+  removeDuplicateLeadingTitleHeading,
+  renderMarkdown,
+  slugify,
+} from "@/lib/blog-utils";
 
 describe("blog slug generation", () => {
   it("replaces title spaces with hyphens for post slugs", () => {
@@ -34,5 +39,35 @@ describe("blog markdown rendering", () => {
     expect(html).toContain("<pre");
     expect(html).toContain('data-language="not-a-real-language"');
     expect(html).toContain("const value = 1");
+  });
+
+  it("removes a duplicate leading title heading before rendering", async () => {
+    const markdown = removeDuplicateLeadingTitleHeading(
+      "# My Post ###\n\nIntro text.\n\n## Section",
+      "My Post",
+    );
+    const { headings, html } = await renderMarkdown(markdown);
+
+    expect(html).not.toContain("<h1");
+    expect(html).toContain("<p>Intro text.</p>");
+    expect(headings).toEqual([{ id: "section", text: "Section", level: 2 }]);
+  });
+
+  it("keeps non-duplicate and non-leading title headings", () => {
+    expect(
+      removeDuplicateLeadingTitleHeading("# Other Post\n\nBody", "My Post"),
+    ).toBe("# Other Post\n\nBody");
+    expect(
+      removeDuplicateLeadingTitleHeading("Intro\n\n# My Post", "My Post"),
+    ).toBe("Intro\n\n# My Post");
+    expect(
+      removeDuplicateLeadingTitleHeading("## My Post\n\nBody", "My Post"),
+    ).toBe("## My Post\n\nBody");
+    expect(
+      removeDuplicateLeadingTitleHeading(
+        "# Use in SQL\n\nBody",
+        "Use * in SQL",
+      ),
+    ).toBe("# Use in SQL\n\nBody");
   });
 });
