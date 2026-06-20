@@ -345,6 +345,8 @@ function sanitizeMarkdownHtml(html: string): string {
       },
       span: {
         color: [HEX_COLOR_PATTERN],
+        "font-style": [/^(normal|italic)$/],
+        "font-weight": [/^(400|500|600|700|bold)$/],
         "--shiki-dark": [HEX_COLOR_PATTERN],
       },
     },

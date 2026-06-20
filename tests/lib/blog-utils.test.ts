@@ -41,6 +41,15 @@ describe("blog markdown rendering", () => {
     expect(html).toContain("const value = 1");
   });
 
+  it("preserves Shiki token styles for highlighted code blocks", async () => {
+    const { html } = await renderMarkdown("```ts\nconst value = 1\n```");
+
+    expect(html).toContain('class="shiki');
+    expect(html).toContain("--shiki-dark:");
+    expect(html).toContain("color:#");
+    expect(html).toContain('<span class="line">');
+  });
+
   it("removes a duplicate leading title heading before rendering", async () => {
     const markdown = removeDuplicateLeadingTitleHeading(
       "# My Post ###\n\nIntro text.\n\n## Section",

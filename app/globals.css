@@ -440,27 +440,48 @@ html body[data-scroll-locked] .width-before-scroll-bar {
 }
 
 .prose-editorial pre {
-  background: var(--muted);
+  background: color-mix(in oklch, var(--muted) 88%, var(--background));
   border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 1.25em 1.5em;
-  overflow-x: auto;
-  margin: 2em 0;
+  border-radius: 10px;
+  color: var(--foreground);
+  direction: ltr;
+  font-family: var(--font-mono);
   font-size: 0.875rem;
   line-height: 1.7;
+  margin: 2em 0;
+  overflow-x: auto;
+  padding: 1.25em 1.5em;
   position: relative;
+  tab-size: 2;
+  text-align: left;
+  white-space: pre;
 }
 .prose-editorial pre code {
   background: none;
-  padding: 0;
   border-radius: 0;
+  color: inherit;
+  display: block;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  min-width: max-content;
+  padding: 0;
+  white-space: pre;
 }
 .prose-editorial pre.shiki {
-  background: var(--muted) !important;
-  color: var(--foreground);
+  background: color-mix(
+    in oklch,
+    var(--muted) 88%,
+    var(--background)
+  ) !important;
+  color: var(--shiki-light, var(--foreground));
 }
 .dark .prose-editorial pre.shiki {
-  background: color-mix(in oklch, var(--muted) 70%, transparent) !important;
+  background: color-mix(
+    in oklch,
+    var(--muted) 72%,
+    var(--background)
+  ) !important;
   color: var(--shiki-dark, var(--foreground)) !important;
 }
 .dark .prose-editorial pre.shiki span {
@@ -472,6 +493,7 @@ html body[data-scroll-locked] .width-before-scroll-bar {
 .prose-editorial pre.shiki .line {
   display: block;
   min-height: 1.7em;
+  white-space: pre;
 }
 
 .prose-editorial img {
