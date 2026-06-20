@@ -1,11 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import {
-  getAllTags,
-  getPostsByTag,
-  getSiteSettings,
-  getTagBySlug,
-} from "@/lib/queries";
+import { getAllTags, getPostsByTag, getTagBySlug } from "@/lib/queries";
 import { PostCard } from "@/components/post-card";
 import { tagPath } from "@/lib/route-segments";
 import type { Metadata } from "next";
@@ -49,12 +44,8 @@ export default async function TagPage({ params }: TagPageProps) {
     notFound();
   }
 
-  const [posts, settings] = await Promise.all([
-    getPostsByTag(slug),
-    getSiteSettings(),
-  ]);
+  const posts = await getPostsByTag(slug);
   const rssPath = `${tagPath(tag.slug)}/rss.xml`;
-  const fallbackImageUrl = settings?.default_og_image_url || null;
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
@@ -87,12 +78,7 @@ export default async function TagPage({ params }: TagPageProps) {
       ) : (
         <div className="space-y-14 sm:space-y-16">
           {posts.map((post, index) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              index={index}
-              fallbackImageUrl={fallbackImageUrl}
-            />
+            <PostCard key={post.id} post={post} index={index} />
           ))}
         </div>
       )}

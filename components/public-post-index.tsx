@@ -16,7 +16,6 @@ export function PublicPostIndex({ result, settings }: PublicPostIndexProps) {
   const siteName = settings?.site_name || DEFAULT_SITE_NAME;
   const siteDescription =
     settings?.site_description || DEFAULT_SITE_DESCRIPTION;
-  const fallbackImageUrl = settings?.default_og_image_url || null;
 
   return (
     <div className="max-w-[640px] mx-auto px-6 py-16 sm:py-20">
@@ -34,12 +33,7 @@ export function PublicPostIndex({ result, settings }: PublicPostIndexProps) {
       ) : (
         <section className="space-y-14 sm:space-y-16">
           {result.items.map((post, index) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              index={index}
-              fallbackImageUrl={fallbackImageUrl}
-            />
+            <PostCard key={post.id} post={post} index={index} />
           ))}
         </section>
       )}
