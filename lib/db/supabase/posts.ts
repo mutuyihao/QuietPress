@@ -49,6 +49,26 @@ function getPostSlugVariants(slug: string): string[] {
   return Array.from(new Set([...routeVariants, ...legacySlugVariants]));
 }
 
+function selectPreferredSlugMatch(
+  posts: NestedPostRow[] | null,
+  slugVariants: string[],
+): NestedPostRow | null {
+  if (!posts || posts.length === 0) return null;
+
+  const postsBySlug = new Map(
+    posts
+      .filter((post) => typeof post.slug === "string")
+      .map((post) => [post.slug, post]),
+  );
+
+  for (const variant of slugVariants) {
+    const post = postsBySlug.get(variant);
+    if (post) return post;
+  }
+
+  return posts[0] ?? null;
+}
+
 function isArchivePost(value: unknown): value is ArchivePost {
   if (!value || typeof value !== "object") return false;
 
@@ -276,35 +296,33 @@ export class SupabasePostRepository implements PostRepository {
   async getBySlug(slug: string): Promise<PostWithTags | null> {
     const slugVariants = getPostSlugVariants(slug);
 
-    const { data: post, error } = await this.supabase
+    const { data: posts, error } = await this.supabase
       .from("posts")
       .select(POST_WITH_TAGS_SELECT)
       .in("slug", slugVariants)
       .eq("status", "published")
       .lte("published_at", new Date().toISOString())
-      .order("published_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(slugVariants.length);
 
-    if (error || !post) return null;
+    if (error) return null;
 
-    return mapNestedPost(post);
+    const post = selectPreferredSlugMatch(posts, slugVariants);
+    return post ? mapNestedPost(post) : null;
   }
 
   async getBySlugAny(slug: string): Promise<PostWithTags | null> {
     const slugVariants = getPostSlugVariants(slug);
 
-    const { data: post, error } = await this.supabase
+    const { data: posts, error } = await this.supabase
       .from("posts")
       .select(POST_WITH_TAGS_SELECT)
       .in("slug", slugVariants)
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(slugVariants.length);
 
-    if (error || !post) return null;
+    if (error) return null;
 
-    return mapNestedPost(post);
+    const post = selectPreferredSlugMatch(posts, slugVariants);
+    return post ? mapNestedPost(post) : null;
   }
 
   async getById(id: string): Promise<PostWithTags | null> {
