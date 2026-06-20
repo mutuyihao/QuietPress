@@ -4,11 +4,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireAdmin } from "@/lib/admin-auth";
 import { createRepositories } from "@/lib/db";
-import {
-  createPostSlug,
-  slugify,
-  calculateReadingTime,
-} from "@/lib/blog-utils";
+import { slugify, calculateReadingTime } from "@/lib/blog-utils";
+import { getUniquePostSlug } from "@/lib/post-slugs";
 import {
   createPostSchema,
   updatePostSchema,
@@ -28,7 +25,6 @@ import {
   revalidateTagContent,
 } from "@/lib/blog/revalidation";
 import type { PostStatus } from "@/lib/types";
-import type { Repositories } from "@/lib/db";
 import { logger } from "@/lib/logger";
 
 type ActionResult<T extends object = Record<string, never>> =
@@ -39,26 +35,6 @@ type ActionFailure = Extract<ActionResult, { success: false }>;
 async function getAdminRepos() {
   const { supabase, user } = await requireAdmin();
   return { supabase, repos: createRepositories(supabase), userId: user.id };
-}
-
-async function getUniquePostSlug(
-  repos: Repositories,
-  base: string,
-  excludingId?: string,
-): Promise<string> {
-  const normalizedBase = base || "untitled";
-  const existing = new Set(
-    await repos.posts.findSlugsByPrefix(normalizedBase, excludingId),
-  );
-  let slug = normalizedBase;
-  let index = 2;
-
-  while (existing.has(slug)) {
-    slug = `${normalizedBase}-${index}`;
-    index += 1;
-  }
-
-  return slug;
 }
 
 function validationError(errors: { message: string }[]): ActionFailure {
@@ -137,7 +113,7 @@ export async function createPost(formData: FormData) {
       noindex,
       tags: tagIds,
     } = parsed.data;
-    const slug = await getUniquePostSlug(repos, createPostSlug(title ?? ""));
+    const slug = await getUniquePostSlug(repos.posts, title ?? "");
     const reading_time_minutes = calculateReadingTime(content_markdown);
     const published_at =
       status === "published" ? new Date().toISOString() : null;
@@ -209,12 +185,19 @@ export async function updatePost(postId: string, formData: FormData) {
       tags: tagIds,
     } = parsed.data;
     const existingPost = await repos.posts.getById(postId);
-    const slug = await getUniquePostSlug(repos, createPostSlug(title), postId);
+    if (!existingPost) return { success: false, error: "Post not found" };
+
+    const slug = await getUniquePostSlug(repos.posts, title, postId);
+    const slugChanged = slug !== existingPost.slug;
     const reading_time_minutes = calculateReadingTime(content_markdown);
 
     let published_at = existingPost?.published_at ?? null;
     if (status === "published" && existingPost?.status !== "published") {
       published_at = new Date().toISOString();
+    }
+
+    if (slugChanged) {
+      await repos.posts.addSlugRedirect(postId, existingPost.slug);
     }
 
     await repos.posts.update(postId, {
@@ -241,11 +224,11 @@ export async function updatePost(postId: string, formData: FormData) {
     });
 
     await auditAdminAction(supabase, userId, "update", "post", postId, {
-      previousSlug: existingPost?.slug,
+      previousSlug: slugChanged ? existingPost.slug : undefined,
       slug,
       status,
     });
-    revalidatePostContent(slug, existingPost?.slug);
+    revalidatePostContent(slug, existingPost.slug);
 
     return { success: true };
   }, "更新文章失败");

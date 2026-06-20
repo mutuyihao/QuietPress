@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import { getRouteSegmentVariants } from "@/lib/route-segments";
 import { slugify } from "@/lib/blog-utils";
+import { normalizePostSlugBase } from "@/lib/post-slugs";
 import { logger } from "@/lib/logger";
 
 export const POST_WITH_TAGS_SELECT = "*, post_tags(tags(*))";
@@ -26,6 +27,11 @@ export interface NestedPostRow extends PostRow {
 
 interface PostTagWithPostRow {
   posts?: NestedPostRow | NestedPostRow[] | null;
+}
+
+interface SlugRedirectRow {
+  post_id: string;
+  slug: string;
 }
 
 type PostUpdatePayload = Partial<{
@@ -49,26 +55,6 @@ function getPostSlugVariants(slug: string): string[] {
   return Array.from(new Set([...routeVariants, ...legacySlugVariants]));
 }
 
-function selectPreferredSlugMatch(
-  posts: NestedPostRow[] | null,
-  slugVariants: string[],
-): NestedPostRow | null {
-  if (!posts || posts.length === 0) return null;
-
-  const postsBySlug = new Map(
-    posts
-      .filter((post) => typeof post.slug === "string")
-      .map((post) => [post.slug, post]),
-  );
-
-  for (const variant of slugVariants) {
-    const post = postsBySlug.get(variant);
-    if (post) return post;
-  }
-
-  return posts[0] ?? null;
-}
-
 function isArchivePost(value: unknown): value is ArchivePost {
   if (!value || typeof value !== "object") return false;
 
@@ -84,6 +70,10 @@ function isArchivePost(value: unknown): value is ArchivePost {
 
 function escapeIlikePattern(value: string): string {
   return value.replace(/[\\%_]/g, (match) => `\\${match}`);
+}
+
+function quotePostgrestFilterValue(value: string): string {
+  return `"${value.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
 }
 
 function getNestedTags(value: unknown): Tag[] {
@@ -152,6 +142,72 @@ async function attachTags(
 
 export class SupabasePostRepository implements PostRepository {
   constructor(private supabase: SupabaseClient) {}
+
+  private async getPostByIdInternal(
+    id: string,
+    publishedOnly: boolean,
+  ): Promise<PostWithTags | null> {
+    let request = this.supabase
+      .from("posts")
+      .select(POST_WITH_TAGS_SELECT)
+      .eq("id", id);
+
+    if (publishedOnly) {
+      request = request
+        .eq("status", "published")
+        .lte("published_at", new Date().toISOString());
+    }
+
+    const { data: post, error } = await request.maybeSingle();
+    if (error || !post) return null;
+    return mapNestedPost(post);
+  }
+
+  private async getPostBySlugVariants(
+    slugVariants: string[],
+    publishedOnly: boolean,
+  ): Promise<PostWithTags | null> {
+    for (const slugVariant of slugVariants) {
+      let request = this.supabase
+        .from("posts")
+        .select(POST_WITH_TAGS_SELECT)
+        .eq("slug", slugVariant);
+
+      if (publishedOnly) {
+        request = request
+          .eq("status", "published")
+          .lte("published_at", new Date().toISOString());
+      }
+
+      const { data: post, error } = await request.maybeSingle();
+
+      if (error) continue;
+      if (post) return mapNestedPost(post);
+    }
+
+    return null;
+  }
+
+  private async getPostByRedirectSlugVariants(
+    slugVariants: string[],
+    publishedOnly: boolean,
+  ): Promise<PostWithTags | null> {
+    for (const slugVariant of slugVariants) {
+      const { data: redirect, error } = await this.supabase
+        .from("post_slug_redirects")
+        .select("post_id, slug")
+        .eq("slug", slugVariant)
+        .maybeSingle();
+
+      if (error || !redirect) continue;
+
+      const postId = (redirect as SlugRedirectRow).post_id;
+      const post = await this.getPostByIdInternal(postId, publishedOnly);
+      if (post) return post;
+    }
+
+    return null;
+  }
 
   async list(page = 1, pageSize = 10): Promise<PaginatedResult<PostWithTags>> {
     const from = (page - 1) * pageSize;
@@ -275,7 +331,7 @@ export class SupabasePostRepository implements PostRepository {
     prefix: string,
     excludingId?: string,
   ): Promise<string[]> {
-    const safePrefix = slugify(prefix).slice(0, 200) || "untitled";
+    const safePrefix = normalizePostSlugBase(prefix);
     let query = this.supabase
       .from("posts")
       .select("slug")
@@ -287,42 +343,47 @@ export class SupabasePostRepository implements PostRepository {
     }
 
     const { data, error } = await query;
-    if (error || !data) return [];
-    return data
+    const postSlugs =
+      error || !data
+        ? []
+        : data
+            .map((row) => row.slug)
+            .filter((slug): slug is string => typeof slug === "string");
+
+    let redirectQuery = this.supabase
+      .from("post_slug_redirects")
+      .select("slug, post_id")
+      .or(`slug.eq.${safePrefix},slug.like.${safePrefix}-%`)
+      .limit(1000);
+
+    if (excludingId) {
+      redirectQuery = redirectQuery.neq("post_id", excludingId);
+    }
+
+    const { data: redirects } = await redirectQuery;
+    const redirectSlugs = (redirects || [])
       .map((row) => row.slug)
       .filter((slug): slug is string => typeof slug === "string");
+
+    return Array.from(new Set([...postSlugs, ...redirectSlugs]));
   }
 
   async getBySlug(slug: string): Promise<PostWithTags | null> {
     const slugVariants = getPostSlugVariants(slug);
 
-    const { data: posts, error } = await this.supabase
-      .from("posts")
-      .select(POST_WITH_TAGS_SELECT)
-      .in("slug", slugVariants)
-      .eq("status", "published")
-      .lte("published_at", new Date().toISOString())
-      .limit(slugVariants.length);
-
-    if (error) return null;
-
-    const post = selectPreferredSlugMatch(posts, slugVariants);
-    return post ? mapNestedPost(post) : null;
+    return (
+      (await this.getPostBySlugVariants(slugVariants, true)) ||
+      (await this.getPostByRedirectSlugVariants(slugVariants, true))
+    );
   }
 
   async getBySlugAny(slug: string): Promise<PostWithTags | null> {
     const slugVariants = getPostSlugVariants(slug);
 
-    const { data: posts, error } = await this.supabase
-      .from("posts")
-      .select(POST_WITH_TAGS_SELECT)
-      .in("slug", slugVariants)
-      .limit(slugVariants.length);
-
-    if (error) return null;
-
-    const post = selectPreferredSlugMatch(posts, slugVariants);
-    return post ? mapNestedPost(post) : null;
+    return (
+      (await this.getPostBySlugVariants(slugVariants, false)) ||
+      (await this.getPostByRedirectSlugVariants(slugVariants, false))
+    );
   }
 
   async getById(id: string): Promise<PostWithTags | null> {
@@ -339,13 +400,20 @@ export class SupabasePostRepository implements PostRepository {
 
   async listByTag(tagSlug: string): Promise<PostWithTags[]> {
     const tagSlugVariants = getRouteSegmentVariants(tagSlug);
+    let tag: Tag | null = null;
 
-    const { data: tag } = await this.supabase
-      .from("tags")
-      .select("*")
-      .in("slug", tagSlugVariants)
-      .limit(1)
-      .maybeSingle();
+    for (const tagSlugVariant of tagSlugVariants) {
+      const { data } = await this.supabase
+        .from("tags")
+        .select("*")
+        .eq("slug", tagSlugVariant)
+        .maybeSingle();
+
+      if (data) {
+        tag = data;
+        break;
+      }
+    }
 
     if (!tag) return [];
 
@@ -387,7 +455,6 @@ export class SupabasePostRepository implements PostRepository {
     limit = 20,
   ): Promise<PostWithTags[]> {
     const normalized = query
-      .replace(/[(),]/g, " ")
       .replace(/\s+/g, " ")
       .trim()
       .slice(0, 200);
@@ -404,7 +471,9 @@ export class SupabasePostRepository implements PostRepository {
     }
 
     if (normalized) {
-      const pattern = `%${escapeIlikePattern(normalized)}%`;
+      const pattern = quotePostgrestFilterValue(
+        `%${escapeIlikePattern(normalized)}%`,
+      );
       request = request.or(
         [
           `title.ilike.${pattern}`,
@@ -484,6 +553,21 @@ export class SupabasePostRepository implements PostRepository {
 
       if (error) throw new Error(error.message);
     }
+  }
+
+  async addSlugRedirect(postId: string, slug: string): Promise<void> {
+    const normalizedSlug = slug.trim();
+    if (!normalizedSlug) return;
+
+    const { error } = await this.supabase.from("post_slug_redirects").upsert(
+      {
+        post_id: postId,
+        slug: normalizedSlug,
+      },
+      { onConflict: "slug", ignoreDuplicates: true },
+    );
+
+    if (error) throw new Error(error.message);
   }
 
   async delete(id: string): Promise<{ slug: string | null }> {

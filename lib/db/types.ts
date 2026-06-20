@@ -74,6 +74,7 @@ export interface PostRepository {
   ): Promise<PostWithTags[]>;
   create(input: CreatePostInput): Promise<{ id: string }>;
   update(id: string, input: UpdatePostInput): Promise<void>;
+  addSlugRedirect(postId: string, slug: string): Promise<void>;
   delete(id: string): Promise<{ slug: string | null }>;
   updateStatus(ids: string[], status: PostStatus): Promise<void>;
   deleteBatch(ids: string[]): Promise<void>;

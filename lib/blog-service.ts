@@ -1,10 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  calculateReadingTime,
-  createPostSlug,
-  slugify,
-} from "@/lib/blog-utils";
+import { calculateReadingTime, slugify } from "@/lib/blog-utils";
 import { createRepositories } from "@/lib/db";
+import { getUniquePostSlug } from "@/lib/post-slugs";
 import { importQuietPressPackage } from "@/lib/migration/import";
 import { createMigrationPreview } from "@/lib/migration/preview";
 import { createQuietPressExport } from "@/lib/migration/export";
@@ -115,25 +112,6 @@ async function resolveTagIds(
   return tags.filter((tag) => requested.has(tag.slug)).map((tag) => tag.id);
 }
 
-async function getUniquePostSlug(
-  context: BlogServiceContext,
-  base: string,
-  excludingId?: string,
-): Promise<string> {
-  const normalizedBase = base || "untitled";
-  const repos = createRepositories(context.supabase);
-  const existing = new Set(
-    await repos.posts.findSlugsByPrefix(normalizedBase, excludingId),
-  );
-  let slug = normalizedBase;
-  let index = 2;
-  while (existing.has(slug)) {
-    slug = `${normalizedBase}-${index}`;
-    index += 1;
-  }
-  return slug;
-}
-
 export async function searchBlogPosts(
   context: BlogServiceContext,
   input: { query?: string; status?: PostStatus | "all"; limit?: number },
@@ -180,7 +158,7 @@ export async function createBlogPostDraft(
   const repos = createRepositories(context.supabase);
   const [tagIds, slug] = await Promise.all([
     resolveTagIds(context, input.tag_slugs),
-    getUniquePostSlug(context, createPostSlug(input.title)),
+    getUniquePostSlug(repos.posts, input.title),
   ]);
   const readingTime = calculateReadingTime(input.content_markdown);
 
@@ -223,14 +201,15 @@ export async function updateBlogPost(
   const nextTitle = input.title ?? existing.title;
   const nextContent = input.content_markdown ?? existing.content_markdown;
   const update: Parameters<typeof repos.posts.update>[1] = {};
+  let nextSlug = existing.slug;
 
   if (input.title !== undefined) {
     update.title = input.title;
-    update.slug = await getUniquePostSlug(
-      context,
-      createPostSlug(input.title),
-      input.id,
-    );
+    nextSlug = await getUniquePostSlug(repos.posts, input.title, input.id);
+    if (nextSlug !== existing.slug) {
+      await repos.posts.addSlugRedirect(input.id, existing.slug);
+      update.slug = nextSlug;
+    }
   }
   if (input.content_markdown !== undefined) {
     update.contentMarkdown = input.content_markdown;
@@ -262,7 +241,7 @@ export async function updateBlogPost(
     userId: context.userId,
   });
 
-  revalidatePostContent(existing.slug, update.slug);
+  revalidatePostContent(nextSlug, existing.slug);
   if (input.tag_slugs) {
     revalidateTagContent();
   }

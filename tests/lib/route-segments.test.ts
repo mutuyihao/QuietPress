@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   getRouteSegmentVariants,
   postPath,
+  routeSegmentsEquivalent,
   tagPath,
 } from "@/lib/route-segments";
 
@@ -26,5 +27,12 @@ describe("route segment helpers", () => {
       "hello world",
       "hello%20world",
     ]);
+  });
+
+  it("compares route-equivalent slug forms after path normalization", () => {
+    expect(routeSegmentsEquivalent("hello world", "hello-world")).toBe(true);
+    expect(routeSegmentsEquivalent("hello\uFF0Cworld", "helloworld")).toBe(
+      false,
+    );
   });
 });

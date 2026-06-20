@@ -45,6 +45,10 @@ export function encodeRouteSegment(segment: string): string {
   );
 }
 
+export function routeSegmentsEquivalent(a: string, b: string): boolean {
+  return encodeRouteSegment(a) === encodeRouteSegment(b);
+}
+
 export function postPath(slug: string): string {
   return `/posts/${encodeRouteSegment(slug)}`;
 }

@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -16,7 +16,12 @@ import { ArticleLD, BreadcrumbLD } from "@/components/json-ld";
 import { RelatedPosts } from "@/components/related-posts";
 import { CommentSection } from "@/components/comment-section";
 import { getRelatedPosts } from "@/lib/related-posts";
-import { postUrl, tagPath } from "@/lib/route-segments";
+import {
+  postPath,
+  postUrl,
+  routeSegmentsEquivalent,
+  tagPath,
+} from "@/lib/route-segments";
 import type { Metadata } from "next";
 
 export const revalidate = 86400;
@@ -77,6 +82,10 @@ export default async function PostPage({ params }: PostPageProps) {
 
   if (!post) {
     notFound();
+  }
+
+  if (!routeSegmentsEquivalent(slug, post.slug)) {
+    permanentRedirect(postPath(post.slug));
   }
 
   const settings = await getSiteSettings();
