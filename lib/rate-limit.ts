@@ -9,9 +9,11 @@ const DEFAULT_WINDOW_MS = 60_000;
 const DEFAULT_MAX_REQUESTS = 5;
 const MAX_ENTRIES = 10_000;
 const DURABLE_RETRY_AFTER_MS = 60_000;
+const FINGERPRINT_UNAVAILABLE_IDENTIFIER = "fingerprint-unavailable";
 
 let durableUnavailableUntil = 0;
 let durableFallbackActive = false;
+let fingerprintFallbackActive = false;
 
 interface RateLimitOptions {
   scope?: string;
@@ -75,7 +77,23 @@ export async function checkRateLimitForRequest(
   resetAt: number;
   retryAfter: number;
 }> {
-  return checkRateLimitIdentifier(getClientFingerprint(request), options);
+  try {
+    const identifier = getClientFingerprint(request);
+    if (fingerprintFallbackActive) {
+      fingerprintFallbackActive = false;
+      logger.warn("client fingerprint restored for rate limiting");
+    }
+    return checkRateLimitIdentifier(identifier, options);
+  } catch (error) {
+    if (!fingerprintFallbackActive) {
+      fingerprintFallbackActive = true;
+      logger.warn("client fingerprint unavailable; using in-memory fallback", {
+        err: error,
+      });
+    }
+
+    return checkRateLimit(FINGERPRINT_UNAVAILABLE_IDENTIFIER, options);
+  }
 }
 
 export async function checkRateLimitIdentifier(

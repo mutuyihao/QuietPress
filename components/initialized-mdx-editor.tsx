@@ -156,6 +156,20 @@ function isCodeMirrorPasteTarget(target: EventTarget | null): boolean {
   return target instanceof Element && Boolean(target.closest(".cm-editor"));
 }
 
+function setForwardedRef<T>(
+  ref: ForwardedRef<T> | null,
+  value: T | null,
+): void {
+  if (!ref) return;
+
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+
+  (ref as MutableRefObject<T | null>).current = value;
+}
+
 export default function InitializedMDXEditor({
   editorRef,
   imageUploadConfig,
@@ -184,14 +198,7 @@ export default function InitializedMDXEditor({
   const setEditorRef = useCallback(
     (instance: MDXEditorMethods | null) => {
       mdxEditorRef.current = instance;
-
-      if (typeof editorRef === "function") {
-        editorRef(instance);
-      } else if (editorRef) {
-        (
-          editorRef as MutableRefObject<MDXEditorMethods | null>
-        ).current = instance;
-      }
+      setForwardedRef(editorRef, instance);
     },
     [editorRef],
   );
